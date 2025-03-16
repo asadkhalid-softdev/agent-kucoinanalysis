@@ -19,15 +19,15 @@ class SentimentAnalyzer:
     
     # Indicator importance weights (can be adjusted)
     INDICATOR_WEIGHTS = {
-        "RSI": 1.0,
-        "MACD": 1.0,
-        "BBANDS": 0.8,
-        "SMA": 0.7,
-        "EMA": 0.8,
-        "OBV": 0.6,
-        "STOCH": 0.7,
-        "ADX": 0.6,
-        "FIBONACCI": 0.5
+        "RSI": 1.2,       # Increased - highly reliable on 1H charts
+        "MACD": 1.3,      # Increased - excellent trend and momentum indicator for 1H
+        "BBANDS": 1.0,    # Increased - volatility and price extremes are meaningful on 1H
+        "SMA": 0.9,       # Increased - trend identification is important
+        "EMA": 1.1,       # Increased - responsive trend signals work well on 1H
+        "OBV": 0.8,       # Increased - volume confirmation is valuable
+        "STOCH": 0.9,     # Increased - momentum shifts are significant on 1H
+        "ADX": 0.8,       # Increased - trend strength is crucial for day trading
+        "FIBONACCI": 0.7  # Increased - support/resistance levels help with entries/exits
     }
     
     def __init__(self):

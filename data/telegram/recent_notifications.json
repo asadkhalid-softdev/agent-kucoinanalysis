@@ -1,0 +1,107 @@
+{
+  "MTRG-USDT": {
+    "timestamp": "2025-03-17T00:45:42.902069",
+    "sentiment": {
+      "overall": "buy",
+      "strength": "moderate"
+    }
+  },
+  "ACS-USDT": {
+    "timestamp": "2025-03-17T00:46:18.971218",
+    "sentiment": {
+      "overall": "buy",
+      "strength": "moderate"
+    }
+  },
+  "TRBDOWN-USDT": {
+    "timestamp": "2025-03-17T00:46:34.954783",
+    "sentiment": {
+      "overall": "buy",
+      "strength": "moderate"
+    }
+  },
+  "SHRAP-USDT": {
+    "timestamp": "2025-03-17T00:46:37.553651",
+    "sentiment": {
+      "overall": "buy",
+      "strength": "moderate"
+    }
+  },
+  "NEON-USDT": {
+    "timestamp": "2025-03-17T00:46:52.623866",
+    "sentiment": {
+      "overall": "buy",
+      "strength": "moderate"
+    }
+  },
+  "FURY-USDT": {
+    "timestamp": "2025-03-17T00:47:13.111112",
+    "sentiment": {
+      "overall": "buy",
+      "strength": "moderate"
+    }
+  },
+  "SQD-USDT": {
+    "timestamp": "2025-03-17T00:47:13.730607",
+    "sentiment": {
+      "overall": "buy",
+      "strength": "moderate"
+    }
+  },
+  "ZKL-USDT": {
+    "timestamp": "2025-03-17T00:47:20.112228",
+    "sentiment": {
+      "overall": "buy",
+      "strength": "moderate"
+    }
+  },
+  "SLF-USDT": {
+    "timestamp": "2025-03-17T00:47:25.786306",
+    "sentiment": {
+      "overall": "buy",
+      "strength": "moderate"
+    }
+  },
+  "RMV-USDT": {
+    "timestamp": "2025-03-17T00:47:31.855496",
+    "sentiment": {
+      "overall": "buy",
+      "strength": "moderate"
+    }
+  },
+  "CROS-USDT": {
+    "timestamp": "2025-03-17T00:47:32.214481",
+    "sentiment": {
+      "overall": "buy",
+      "strength": "moderate"
+    }
+  },
+  "MNRY-USDT": {
+    "timestamp": "2025-03-17T00:47:49.893326",
+    "sentiment": {
+      "overall": "buy",
+      "strength": "moderate"
+    }
+  },
+  "VANA-USDT": {
+    "timestamp": "2025-03-17T00:47:55.212040",
+    "sentiment": {
+      "overall": "buy",
+      "strength": "moderate"
+    }
+  },
+  "AIPUMP-USDT": {
+    "timestamp": "2025-03-17T00:47:55.928955",
+    "sentiment": {
+      "overall": "buy",
+      "strength": "moderate"
+    }
+  },
+  "MELANIA-USDT": {
+    "timestamp": "2025-03-17T00:48:01.268118",
+    "sentiment": {
+      "overall": "buy",
+      "strength": "moderate"
+    }
+  }
+}

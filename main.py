@@ -18,6 +18,10 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 
 from datetime import datetime, timedelta
+from config.user_config import UserConfig
+
+# Initialize user config
+user_config = UserConfig()
 
 # Initialize logger
 logger_instance = Logger(
@@ -34,7 +38,7 @@ kucoin_client = KuCoinClient(
     api_secret=settings.kucoin_api_secret,
     api_passphrase=settings.kucoin_api_passphrase
 )
-analysis_engine = AnalysisEngine()
+analysis_engine = AnalysisEngine(config=user_config.get_config())
 
 # Initialize symbols from KuCoin instead of using symbols.json
 symbol_storage.initialize_symbols_from_kucoin(kucoin_client)
@@ -70,11 +74,11 @@ def analyze_symbol(symbol):
                 # Get 200 days of data
                 start_time = "200 days ago"
                 # Need at least 50 days for meaningful analysis
-                min_candles = 50
+                min_candles = 200
             elif timeframe == "4hour":
-                # Get 30 days of 4h data (180 candles)
-                start_time = "30 days ago"
-                min_candles = 120
+                # Get 60 days of 4h data (240 candles)
+                start_time = "60 days ago"
+                min_candles = 200
             elif timeframe == "1hour":
                 # Get 14 days of hourly data (336 candles)
                 start_time = "14 days ago"
@@ -153,7 +157,7 @@ def analyze_symbol(symbol):
             logger.error(f"Error getting current price for {symbol}: {str(e)}")
             current_price = 0
             
-        # Analyze symbol using available data
+        # Analyze symbol using available data for primary timeframe
         analysis = analysis_engine.analyze_symbol(symbol, timeframe_data[primary_tf])
         
         # Add current price if not present
@@ -195,33 +199,36 @@ def analyze_symbol(symbol):
         })
 
 async def analyze_all_symbols_async():
-    """Analyze all tracked symbols asynchronously"""
-    symbols = symbol_storage.get_symbols()
-    logger.info(f"Analyzing {len(symbols)} symbols asynchronously")
-    
-    # Create a thread pool for running the analysis tasks
-    # Limit concurrency to avoid rate limits
-    max_workers = min(10, len(symbols))
-    
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        # Create a list to hold all the futures
-        futures = []
+    try:
+        """Analyze all tracked symbols asynchronously"""
+        symbols = symbol_storage.get_symbols()
+        logger.info(f"Analyzing {len(symbols)} symbols asynchronously")
         
-        # Submit all analysis tasks to the executor
-        for symbol in symbols:
-            future = executor.submit(analyze_symbol, symbol)
-            futures.append(future)
+        # Create a thread pool for running the analysis tasks
+        # Limit concurrency to avoid rate limits
+        max_workers = min(10, len(symbols))
         
-        # Process results as they complete
-        for i, future in enumerate(futures):
-            try:
-                # Wait for the task to complete
-                await asyncio.wrap_future(future)
-                logger.info(f"Completed analysis {i+1}/{len(symbols)}")
-            except Exception as e:
-                logger.error(f"Error in async analysis task: {str(e)}")
-    
-    logger.info("Async analysis cycle completed")
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            # Create a list to hold all the futures
+            futures = []
+            
+            # Submit all analysis tasks to the executor
+            for symbol in symbols:
+                future = executor.submit(analyze_symbol, symbol)
+                futures.append(future)
+            
+            # Process results as they complete
+            for i, future in enumerate(futures):
+                try:
+                    # Wait for the task to complete
+                    await asyncio.wrap_future(future)
+                    logger.info(f"Completed analysis {i+1}/{len(symbols)}")
+                except Exception as e:
+                    logger.error(f"Error in async analysis task: {str(e)}")
+        
+        logger.info("Async analysis cycle completed")
+    except Exception as e:
+        logger.error(f"Error in async analysis cycle: {str(e)}")
 
 # Replace the existing analyze_all_symbols function with this one
 @logger_instance.performance_monitor("analyze_all_symbols")
@@ -242,7 +249,7 @@ def start_scheduler():
         analyze_all_symbols, 
         'interval', 
         minutes=settings.analysis_interval,
-        next_run_time=datetime.now() + timedelta(minutes=2)  # First run after 2 minutes
+        next_run_time=datetime.now() + timedelta(seconds=5)  # First run after 1 minutes
     )
 
     scheduler.add_job(
@@ -254,6 +261,8 @@ def start_scheduler():
     
     scheduler.start()
     logger.info(f"Scheduler started with {settings.analysis_interval} minute interval")
+
+    return scheduler
 
 def start_dashboard():
     """Start the monitoring dashboard in a separate thread"""
@@ -275,19 +284,26 @@ def run_initial_analysis():
         logger.error(f"Error in initial analysis: {str(e)}")
 
 if __name__ == "__main__":
-    # Create required directories
-    os.makedirs("logs", exist_ok=True)
-    os.makedirs("data/storage", exist_ok=True)
-    os.makedirs("cache/kucoin", exist_ok=True)
+    try:
+        # Create required directories
+        os.makedirs("logs", exist_ok=True)
+        os.makedirs("data/storage", exist_ok=True)
 
-    main_tf = "1hour"
-    
-    # Start the monitoring dashboard
-    start_dashboard()
-    
-    # Start the background scheduler
-    start_scheduler()
-    
-    # Start the FastAPI server
-    logger.info("Starting API server")
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+        main_tf = settings.main_timeframe
+        logger.info(f"Primary timeframe set to: {main_tf}")
+        
+        # Start the monitoring dashboard
+        start_dashboard()
+        
+        # Start the background scheduler
+        scheduler = start_scheduler()
+        
+        # Start the FastAPI server
+        logger.info("Starting API server")
+        uvicorn.run(app, host="0.0.0.0", port=8000)
+    except Exception as e:
+        logger.error(f"Error starting application: {str(e)}")
+    except KeyboardInterrupt:
+        logger.info("Shutting down application")
+    finally:
+        scheduler.shutdown(wait=False)

@@ -33,7 +33,6 @@ ENV/
 # Application specific
 .env
 logs/
-cache/
 data/storage/
 test_results/
 optimization_results/

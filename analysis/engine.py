@@ -31,24 +31,26 @@ class AnalysisEngine:
         indicators = []
         
         # Add default indicators or use configuration if provided
-        indicators.append(SimpleMovingAverage(window=50))
-        indicators.append(SimpleMovingAverage(window=200))
-        indicators.append(ExponentialMovingAverage(window=20))
-        indicators.append(RSI(window=14))
-        indicators.append(MACD())
-        indicators.append(BollingerBands())
-        
-        # Add more indicators based on config
-        if self.config.get('use_volume_indicators', True):
+        analysis_list = self.config.get('analysis', [])
+        if 'SMA' in analysis_list.get('indicators', []):
+            indicators.append(SimpleMovingAverage(window=20))  # Captures recent trend
+            indicators.append(SimpleMovingAverage(window=50))  # Intermediate trend
+        if 'EMA' in analysis_list.get('indicators', []):
+            indicators.append(ExponentialMovingAverage(window=9))  # Fast signal
+            indicators.append(ExponentialMovingAverage(window=21))  # Medium signal
+        if 'RSI' in analysis_list.get('indicators', []):
+            indicators.append(RSI(window=14))
+        if 'MACD' in analysis_list.get('indicators', []):
+            indicators.append(MACD(fast=12, slow=26, signal=9))  # 
+        if 'BBANDS' in analysis_list.get('indicators', []):
+            indicators.append(BollingerBands(window=20, window_dev=2.0))  # 
+        if 'OBV' in analysis_list.get('indicators', []):
             indicators.append(OnBalanceVolume())
-        
-        if self.config.get('use_stochastic', True):
-            indicators.append(StochasticOscillator())
-        
-        if self.config.get('use_adx', True):
-            indicators.append(AverageDirectionalIndex())
-        
-        if self.config.get('use_fibonacci', False):
+        if 'STOCH' in analysis_list.get('indicators', []):
+            indicators.append(StochasticOscillator(k_period=14, d_period=3, smooth_k=3))  
+        if 'ADX' in analysis_list.get('indicators', []):
+            indicators.append(AverageDirectionalIndex(length=14))  # Trend strength
+        if 'FIBONACCI' in analysis_list.get('indicators', []):
             indicators.append(FibonacciRetracement())
         
         return indicators
@@ -67,8 +69,9 @@ class AnalysisEngine:
         try:
             # Convert klines data to DataFrame
             df = self._prepare_dataframe(klines_data)
+            self.logger.info(f"Analyzing {symbol} with {len(df)} data points")
             
-            if df.empty or len(df) < 200:  # Need enough data for indicators
+            if df.empty or len(df) < 100:  # Need enough data for indicators
                 self.logger.warning(f"Not enough data for {symbol} analysis")
                 return {
                     "symbol": symbol,

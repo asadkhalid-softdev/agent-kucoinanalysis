@@ -16,5 +16,4 @@ services:
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
-      - ./cache:/app/cache
     restart: unless-stopped

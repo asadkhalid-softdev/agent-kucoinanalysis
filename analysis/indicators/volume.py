@@ -15,7 +15,9 @@ class OnBalanceVolume:
         Returns:
             pd.Series: OBV values
         """
-        return ta.obv(df['close'], df['volume'])
+
+        df['obv'] = ta.obv(df['close'], df['volume'])
+        return df['obv']
     
     def get_signal(self, df):
         """Generate trading signal based on OBV

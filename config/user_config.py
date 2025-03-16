@@ -36,7 +36,7 @@ class UserConfig:
         return {
             "analysis": {
                 "interval": 60,  # minutes
-                "timeframes": ["15min", "1hour", "4hour", "1day"],
+                "timeframes": ["1hour"], #["15min", "1hour", "4hour", "1day"],
                 "indicators": [
                     "RSI", "MACD", "BBANDS", "SMA", "EMA", 
                     "OBV", "STOCH", "ADX", "FIBONACCI"

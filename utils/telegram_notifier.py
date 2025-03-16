@@ -191,7 +191,7 @@ class TelegramNotifier:
             price = analysis.get("price", 0.0)
             
             message = f"<b>🚨 {symbol} Alert: {strength.upper()} {overall.upper()}</b>\n\n"
-            message += f"💰 Current Price: ${price:.2f}\n"
+            message += f"💰 Current Price: ${str(price)}\n"
             message += f"🎯 Sentiment: {strength} {overall}\n"
             message += f"🔍 Confidence: {confidence:.2f}\n\n"
             

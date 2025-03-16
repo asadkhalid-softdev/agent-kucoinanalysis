@@ -35,7 +35,7 @@ kucoin_client = KuCoinClient(
     api_secret=settings.kucoin_api_secret,
     api_passphrase=settings.kucoin_api_passphrase
 )
-analysis_engine = AnalysisEngine()
+analysis_engine = AnalysisEngine(config=user_config.get_config())
 
 # Setup OAuth2 with Password Bearer
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -181,15 +181,18 @@ async def get_all_analyses(
     
     return analyses
 
-@app.get("/api/analysis/sentiment", response_model=Dict[str, dict])
-async def get_sentiment_summary(current_user: str = Depends(get_current_user)):
+@app.get("/api/get_sentiments", response_model=Dict[str, dict])
+async def get_sentiment_summary(
+    current_user: str = Depends(get_current_user),
+    limit: int = Query(20, ge=1, le=100)
+    ):
     """
     Get only sentiment summary for all symbols
     """
     sentiment_summary = {}
     symbols = symbol_storage.get_symbols()
     
-    for symbol in symbols:
+    for symbol in symbols[:limit]:
         analysis = symbol_storage.get_analysis(symbol)
         if analysis and "sentiment" in analysis:
             sentiment_summary[symbol] = analysis["sentiment"]

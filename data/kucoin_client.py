@@ -11,7 +11,6 @@ from typing import Optional
 import dateparser
 from binance.exceptions import UnknownDateFormat
 import requests
-from data.cache import APICache
 from datetime import datetime
 
 class RateLimitExceeded(Exception):
@@ -103,7 +102,6 @@ class KuCoinClient:
         self.base_url = "https://api.kucoin.com"
         self.session = requests.Session()
         self.rate_limiter = KuCoinRateLimiter()
-        self.cache = APICache(cache_dir="cache/kucoin")
         
         # Encrypt passphrase if credentials are provided
         if api_passphrase and api_secret:
@@ -140,14 +138,12 @@ class KuCoinClient:
             "Content-Type": "application/json"
         }
     
-    def get_ticker(self, symbol, use_cache=True, cache_ttl=1000):
+    def get_ticker(self, symbol):
         """
         Get ticker information for a specific symbol with caching.
         
         Args:
             symbol (str): Trading pair symbol (e.g., 'BTC-USDT')
-            use_cache (bool): Whether to use cache
-            cache_ttl (int): Cache time-to-live in seconds
             
         Returns:
             dict: Ticker data including price, volume, etc.
@@ -155,19 +151,11 @@ class KuCoinClient:
         endpoint = "/api/v1/market/orderbook/level1"
         params = {"symbol": symbol}
         
-        if use_cache:
-            cached_data = self.cache.get(endpoint, params, ttl=cache_ttl)
-            if cached_data:
-                return cached_data
-        
         response = self._request("GET", f"{endpoint}?symbol={symbol}")
-        
-        if "error" not in response and use_cache:
-            self.cache.set(endpoint, response, params)
             
         return response
     
-    def get_klines(self, symbol, kline_type="1hour", start_time=None, end_time=None, use_cache=True, cache_ttl=1000):
+    def get_klines(self, symbol, kline_type="1hour", start_time=None, end_time=None):
         """
         Get candlestick data for a specific symbol with caching.
         
@@ -176,8 +164,6 @@ class KuCoinClient:
             kline_type (str): Kline interval (e.g., '1min', '1hour', '1day')
             start_time (int, optional): Start time in milliseconds
             end_time (int, optional): End time in milliseconds
-            use_cache (bool): Whether to use cache
-            cache_ttl (int): Cache time-to-live in seconds
             
         Returns:
             list: List of klines data
@@ -194,27 +180,17 @@ class KuCoinClient:
 
         endpoint = "/api/v1/market/candles"
         
-        if use_cache:
-            cached_data = self.cache.get(endpoint, params, ttl=cache_ttl)
-            if cached_data:
-                return cached_data
-        
         query_string = urlencode(params)
         response = self._request("GET", f"{endpoint}?{query_string}")
         
-        if "error" not in response and use_cache:
-            self.cache.set(endpoint, response, params)
-            
         return response
     
-    def get_24h_stats(self, symbol, use_cache=True, cache_ttl=1000):
+    def get_24h_stats(self, symbol):
         """
         Get 24-hour statistics for a specific symbol with caching.
         
         Args:
             symbol (str): Trading pair symbol (e.g., 'BTC-USDT')
-            use_cache (bool): Whether to use cache
-            cache_ttl (int): Cache time-to-live in seconds
             
         Returns:
             dict: 24-hour statistics including high, low, volume, etc.
@@ -222,105 +198,68 @@ class KuCoinClient:
         endpoint = "/api/v1/market/stats"
         params = {"symbol": symbol}
         
-        if use_cache:
-            cached_data = self.cache.get(endpoint, params, ttl=cache_ttl)
-            if cached_data:
-                return cached_data
-        
         response = self._request("GET", f"{endpoint}?symbol={symbol}")
         
-        if "error" not in response and use_cache:
-            self.cache.set(endpoint, response, params)
-            
         return response
     
-    def get_symbols(self, use_cache=True, cache_ttl=3600):
+    def get_symbols(self):
         """
         Get list of symbol pairs with caching.
         
         Args:
-            use_cache (bool): Whether to use cache
-            cache_ttl (int): Cache time-to-live in seconds
+            None
             
         Returns:
             list: List of symbol data dictionaries
         """
         endpoint = "/api/v1/symbols"
         
-        if use_cache:
-            cached_data = self.cache.get(endpoint, ttl=cache_ttl)
-            if cached_data:
-                return cached_data
-        
         response = self._request("GET", endpoint)
         
-        if "error" not in response and use_cache:
-            self.cache.set(endpoint, response)
-            
         # Extract the data array from the response
         if "data" in response:
             return response["data"]
         else:
             return []
     
-    def get_all_tickers(self, use_cache=True, cache_ttl=60):
+    def get_all_tickers(self):
         """
         Get ticker information for all trading pairs with caching.
         
         Args:
-            use_cache (bool): Whether to use cache
-            cache_ttl (int): Cache time-to-live in seconds
+            None
             
         Returns:
             dict: Ticker data for all symbols
         """
         endpoint = "/api/v1/market/allTickers"
         
-        if use_cache:
-            cached_data = self.cache.get(endpoint, ttl=cache_ttl)
-            if cached_data:
-                return cached_data
-        
         response = self._request("GET", endpoint)
         
-        if "error" not in response and use_cache:
-            self.cache.set(endpoint, response)
-            
         return response
     
-    def get_market_list(self, use_cache=True, cache_ttl=3600):
+    def get_market_list(self):
         """
         Get list of available markets with caching.
         
         Args:
-            use_cache (bool): Whether to use cache
-            cache_ttl (int): Cache time-to-live in seconds
+            None
             
         Returns:
             dict: List of available markets
         """
         endpoint = "/api/v1/markets"
         
-        if use_cache:
-            cached_data = self.cache.get(endpoint, ttl=cache_ttl)
-            if cached_data:
-                return cached_data
-        
         response = self._request("GET", endpoint)
         
-        if "error" not in response and use_cache:
-            self.cache.set(endpoint, response)
-            
         return response
     
-    def get_symbols(self, market=None, use_cache=True, cache_ttl=3600):
+    def get_symbols(self, market=None):
         """
         Get list of symbol pairs with caching.
         
         Args:
             market (str, optional): Market (e.g., 'BTC', 'USDT')
-            use_cache (bool): Whether to use cache
-            cache_ttl (int): Cache time-to-live in seconds
             
         Returns:
             dict: List of symbol pairs
@@ -331,42 +270,25 @@ class KuCoinClient:
         if market:
             params["market"] = market
         
-        if use_cache:
-            cached_data = self.cache.get(endpoint, params, ttl=cache_ttl)
-            if cached_data:
-                return cached_data
-        
         query_string = f"?market={market}" if market else ""
         response = self._request("GET", f"{endpoint}{query_string}")
         
-        if "error" not in response and use_cache:
-            self.cache.set(endpoint, response, params)
-            
         return response
     
-    def get_currencies(self, use_cache=True, cache_ttl=3600):
+    def get_currencies(self):
         """
         Get list of currencies with caching.
         
         Args:
-            use_cache (bool): Whether to use cache
-            cache_ttl (int): Cache time-to-live in seconds
+            None
             
         Returns:
             dict: List of currencies
         """
         endpoint = "/api/v1/currencies"
         
-        if use_cache:
-            cached_data = self.cache.get(endpoint, ttl=cache_ttl)
-            if cached_data:
-                return cached_data
-        
         response = self._request("GET", endpoint)
         
-        if "error" not in response and use_cache:
-            self.cache.set(endpoint, response)
-            
         return response
     
     def _request(self, method, endpoint, params=None, data=None):
@@ -412,12 +334,3 @@ class KuCoinClient:
             logging.error(f"Request Error: {e}")
             return {"error": str(e)}
     
-    def clear_cache(self, endpoint=None, params=None):
-        """
-        Clear cache for a specific endpoint or all cache.
-        
-        Args:
-            endpoint (str, optional): API endpoint
-            params (dict, optional): Request parameters
-        """
-        self.cache.clear(endpoint, params)

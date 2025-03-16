@@ -366,8 +366,7 @@ python -m utils.test_telegram
 
 The bot will automatically send you alerts when:
 
-- A symbol develops a strong buy signal
-- A symbol develops a strong sell signal
+- A symbol develops a strong buy or moderate buy signal
 - Any critical system errors occur
 
 Notifications include:

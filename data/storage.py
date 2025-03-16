@@ -16,6 +16,8 @@ class SymbolStorage:
         Args:
             data_dir (str): Directory to store data files
         """
+
+        self.n_files = 2
         self.data_dir = data_dir
         self.symbols_file = os.path.join(data_dir, "symbols.json")
         self.analysis_dir = os.path.join(data_dir, "analysis")
@@ -137,8 +139,8 @@ class SymbolStorage:
             with open(history_file, 'w') as f:
                 json.dump(analysis, f, indent=2)
             
-            # Maintain history limit (keep last 10 analyses)
-            self._prune_history(symbol_dir, 10)
+            # Maintain history limit (keep last n analyses)
+            self._prune_history(symbol_dir, self.n_files)
             
             return True
         except Exception as e:
@@ -264,7 +266,7 @@ class SymbolStorage:
                     continue
                     
                 # Skip symbols ending with UP or DOWN
-                if symbol.endswith("UP") or symbol.endswith("DOWN"):
+                if base_currency.endswith("UP") or base_currency.endswith("DOWN"):
                     continue
                     
                 # Skip symbols with numbers in base currency
@@ -272,8 +274,9 @@ class SymbolStorage:
                     continue
                     
                 filtered_symbols.append(symbol)
-            
+
             self.logger.info(f"Fetched {len(filtered_symbols)} symbols from KuCoin after filtering")
+            
             return filtered_symbols
             
         except Exception as e:
@@ -301,6 +304,7 @@ class SymbolStorage:
             # Save the symbols
             self._save_symbols(symbols)
             self.logger.info(f"Initialized {len(symbols)} symbols from KuCoin")
+
             return True
             
         except Exception as e:
