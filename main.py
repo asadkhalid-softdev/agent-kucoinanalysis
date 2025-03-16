@@ -241,7 +241,7 @@ def start_scheduler():
         analyze_all_symbols, 
         'interval', 
         minutes=settings.analysis_interval,
-        next_run_time=datetime.now() + timedelta(minutes=5)  # First run after 2 minutes
+        next_run_time=datetime.now() + timedelta(minutes=2)  # First run after 2 minutes
     )
 
     scheduler.add_job(
@@ -286,12 +286,6 @@ if __name__ == "__main__":
     
     # Start the background scheduler
     start_scheduler()
-    
-    # Run initial analysis in a background thread
-    analysis_thread = threading.Thread(target=run_initial_analysis)
-    analysis_thread.daemon = True  # Make thread exit when main thread exits
-    analysis_thread.start()
-    logger.info("Initial analysis started in background")
     
     # Start the FastAPI server
     logger.info("Starting API server")
