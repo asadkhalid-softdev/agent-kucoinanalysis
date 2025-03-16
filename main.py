@@ -180,6 +180,7 @@ def analyze_symbol(symbol):
             # Send notification for strong buy signals
             if sentiment_key.lower() in settings.telegram_notify_on_sentiment:
                 logger.info(f"Sending Telegram notification for {symbol}: {sentiment_key}")
+                # The notifier will now check internally if the notification should be sent
                 telegram_notifier.send_analysis_alert(symbol, analysis)
         
     except Exception as e:
@@ -279,7 +280,7 @@ if __name__ == "__main__":
     os.makedirs("data/storage", exist_ok=True)
     os.makedirs("cache/kucoin", exist_ok=True)
 
-    main_tf = "1day"
+    main_tf = "1hour"
     
     # Start the monitoring dashboard
     start_dashboard()
