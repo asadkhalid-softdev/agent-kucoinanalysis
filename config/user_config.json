@@ -1,7 +1,7 @@
 {
     "analysis": {
-      "interval": 60,
-      "timeframes": ["15min", "1hour", "4hour", "1day"],
+      "interval": 1,
+      "timeframes": ["4hour", "1day", "1week"],
       "indicators": [
         "RSI", "MACD", "BBANDS", "SMA", "EMA", 
         "OBV", "STOCH", "ADX", "FIBONACCI"

@@ -17,7 +17,10 @@ class BollingerBands:
         Returns:
             pd.DataFrame: Bollinger Bands values including upper, middle, and lower bands
         """
-        return ta.bbands(df['close'], length=self.window, std=self.window_dev)
+        
+        bbands = ta.bbands(df['close'], length=self.window, std=self.window_dev)
+        
+        return bbands
     
     def get_signal(self, df):
         """Generate trading signal based on Bollinger Bands
@@ -31,15 +34,15 @@ class BollingerBands:
         bbands = self.calculate(df)
         
         # Get column names from pandas-ta output
-        upper_col = f"BBU_{self.window}_{self.window_dev}"
-        middle_col = f"BBM_{self.window}_{self.window_dev}"
-        lower_col = f"BBL_{self.window}_{self.window_dev}"
-        
-        current_price = df['close'].iloc[0]
-        upper_band = bbands[upper_col].iloc[0]
-        middle_band = bbands[middle_col].iloc[0]
-        lower_band = bbands[lower_col].iloc[0]
-        
+        upper_col = f"BBU_{self.window}_{float(self.window_dev)}"
+        middle_col = f"BBM_{self.window}_{float(self.window_dev)}"
+        lower_col = f"BBL_{self.window}_{float(self.window_dev)}"
+
+        current_price = df['close'].iloc[-1]
+        upper_band = bbands[upper_col].iloc[-1]
+        middle_band = bbands[middle_col].iloc[-1]
+        lower_band = bbands[lower_col].iloc[-1]
+
         # Calculate bandwidth and %B
         bandwidth = (upper_band - lower_band) / middle_band
         percent_b = (current_price - lower_band) / (upper_band - lower_band) if upper_band != lower_band else 0.5

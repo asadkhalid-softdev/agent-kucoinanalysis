@@ -47,8 +47,14 @@ def analyze_symbol(symbol):
         current_time = int(time.time())
         
         for timeframe in settings.default_timeframes:
+            
             # Calculate appropriate start time based on timeframe
-            if timeframe == "1day":
+            if timeframe == "1week":
+                # Get 200 days of data
+                start_time = "1 year ago"
+                # Need at least 50 days for meaningful analysis
+                min_candles = 50
+            elif timeframe == "1day":
                 # Get 200 days of data
                 start_time = "200 days ago"
                 # Need at least 50 days for meaningful analysis

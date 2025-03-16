@@ -24,8 +24,8 @@ class Settings(BaseSettings):
     kucoin_api_passphrase: str = os.getenv("KUCOIN_API_PASSPHRASE", "")
     
     # Analysis Settings
-    analysis_interval: int = 60  # minutes
-    default_timeframes: list = ["15min", "1hour", "4hour", "1day"]
+    analysis_interval: int = os.getenv("ANALYSIS_INTERVAL", 60) # minutes
+    default_timeframes: list = ["4hour", "1day", "1week"]
     
     class Config:
         env_file = ".env"
