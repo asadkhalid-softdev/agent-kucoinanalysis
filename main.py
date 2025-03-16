@@ -14,6 +14,8 @@ from config.settings import Settings
 from utils.logger import Logger
 from utils.dashboard_launcher import launch_dashboard
 from utils.telegram_notifier import TelegramNotifier
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 
 from datetime import datetime, timedelta
 
@@ -191,18 +193,41 @@ def analyze_symbol(symbol):
             "sentiment": {"overall": "neutral", "strength": "none", "confidence": 0.0}
         })
 
+async def analyze_all_symbols_async():
+    """Analyze all tracked symbols asynchronously"""
+    symbols = symbol_storage.get_symbols()
+    logger.info(f"Analyzing {len(symbols)} symbols asynchronously")
+    
+    # Create a thread pool for running the analysis tasks
+    # Limit concurrency to avoid rate limits
+    max_workers = min(10, len(symbols))
+    
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        # Create a list to hold all the futures
+        futures = []
+        
+        # Submit all analysis tasks to the executor
+        for symbol in symbols:
+            future = executor.submit(analyze_symbol, symbol)
+            futures.append(future)
+        
+        # Process results as they complete
+        for i, future in enumerate(futures):
+            try:
+                # Wait for the task to complete
+                await asyncio.wrap_future(future)
+                logger.info(f"Completed analysis {i+1}/{len(symbols)}")
+            except Exception as e:
+                logger.error(f"Error in async analysis task: {str(e)}")
+    
+    logger.info("Async analysis cycle completed")
+
+# Replace the existing analyze_all_symbols function with this one
 @logger_instance.performance_monitor("analyze_all_symbols")
 def analyze_all_symbols():
-    """Analyze all tracked symbols with performance monitoring"""
-    symbols = symbol_storage.get_symbols()
-    logger.info(f"Analyzing {len(symbols)} symbols")
-    
-    for symbol in symbols:
-        analyze_symbol(symbol)
-        # Sleep to avoid rate limiting
-        time.sleep(1)
-    
-    logger.info("Analysis cycle completed")
+    """Analyze all tracked symbols"""
+    # Run the async function in the event loop
+    asyncio.run(analyze_all_symbols_async())
 
 def refresh_symbols():
     """Refresh the list of symbols from KuCoin"""
@@ -216,7 +241,7 @@ def start_scheduler():
         analyze_all_symbols, 
         'interval', 
         minutes=settings.analysis_interval,
-        next_run_time=None
+        next_run_time=datetime.now() + timedelta(minutes=5)  # First run after 2 minutes
     )
 
     scheduler.add_job(
@@ -239,6 +264,15 @@ def start_dashboard():
     dashboard_thread.start()
     logger.info("Monitoring dashboard started on port 8050")
 
+# Create a function to run initial analysis in background
+def run_initial_analysis():
+    """Run initial analysis in a background thread"""
+    logger.info("Starting initial analysis in background thread")
+    try:
+        analyze_all_symbols()
+    except Exception as e:
+        logger.error(f"Error in initial analysis: {str(e)}")
+
 if __name__ == "__main__":
     # Create required directories
     os.makedirs("logs", exist_ok=True)
@@ -253,8 +287,11 @@ if __name__ == "__main__":
     # Start the background scheduler
     start_scheduler()
     
-    # Run initial analysis
-    analyze_all_symbols()
+    # Run initial analysis in a background thread
+    analysis_thread = threading.Thread(target=run_initial_analysis)
+    analysis_thread.daemon = True  # Make thread exit when main thread exits
+    analysis_thread.start()
+    logger.info("Initial analysis started in background")
     
     # Start the FastAPI server
     logger.info("Starting API server")

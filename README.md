@@ -383,11 +383,9 @@ Notifications include:
 You can customize which sentiment levels trigger notifications by modifying the `telegram_notify_on_sentiment` setting in your configuration:
 
 ```python
-# Default setting (in config/settings.py)
-telegram_notify_on_sentiment: list = ["strong buy", "strong sell"]
 
 # To add more notification triggers, modify to include additional sentiments:
-telegram_notify_on_sentiment: list = ["strong buy", "strong sell", "moderate buy"]
+telegram_notify_on_sentiment: list = ["strong buy", "moderate buy"]
 ```
 
 
