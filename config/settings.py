@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     telegram_bot_token: str = os.getenv("TELEGRAM_BOT_TOKEN", "")
     telegram_chat_id: str = os.getenv("TELEGRAM_CHAT_ID", "")
     telegram_notifications_enabled: bool = os.getenv("TELEGRAM_NOTIFICATIONS_ENABLED", "true").lower() == "true"
-    telegram_notify_on_sentiment: list = ["strong buy", "moderate buy"]  # Sentiments to notify on
+    telegram_notify_on_sentiment: list = ["strong buy"]  # Sentiments to notify on
 
     class Config:
         env_file = ".env"
