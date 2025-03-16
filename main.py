@@ -13,6 +13,8 @@ from data.kucoin_client import KuCoinClient
 from config.settings import Settings
 from utils.logger import Logger
 from utils.dashboard_launcher import launch_dashboard
+from utils.telegram_notifier import TelegramNotifier
+import config.settings as settings
 
 from datetime import datetime
 
@@ -22,6 +24,12 @@ logger_instance = Logger(
     log_dir="logs"
 )
 logger = logger_instance.get_logger()
+
+# Initialize Telegram notifier
+telegram_notifier = None
+if settings.telegram_bot_token and settings.telegram_notifications_enabled:
+    telegram_notifier = TelegramNotifier(settings.telegram_bot_token, settings.telegram_chat_id)
+    logger.info("Telegram notifications enabled")
 
 # Initialize components
 settings = Settings()
@@ -159,6 +167,16 @@ def analyze_symbol(symbol):
         # Store analysis result
         symbol_storage.store_analysis(symbol, analysis)
         logger.info(f"Analysis completed for {symbol} using {len(timeframe_data)} timeframes")
+        
+        # Check if we should send a Telegram notification
+        if telegram_notifier and "sentiment" in analysis:
+            sentiment = analysis["sentiment"]
+            sentiment_key = f"{sentiment.get('strength', 'none')} {sentiment.get('overall', 'neutral')}"
+            
+            # Send notification for strong buy signals
+            if sentiment_key.lower() in settings.telegram_notify_on_sentiment:
+                logger.info(f"Sending Telegram notification for {symbol}: {sentiment_key}")
+                telegram_notifier.send_analysis_alert(symbol, analysis)
         
     except Exception as e:
         logger.error(f"Error analyzing {symbol}: {str(e)}")

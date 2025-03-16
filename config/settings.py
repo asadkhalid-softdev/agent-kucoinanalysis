@@ -26,6 +26,12 @@ class Settings(BaseSettings):
     # Analysis Settings
     analysis_interval: int = os.getenv("ANALYSIS_INTERVAL", 60) # minutes
     default_timeframes: list = ["4hour", "1day", "1week"]
-    
+
+    # Telegram Settings
+    telegram_bot_token: str = os.getenv("TELEGRAM_BOT_TOKEN", "")
+    telegram_chat_id: str = os.getenv("TELEGRAM_CHAT_ID", "")
+    telegram_notifications_enabled: bool = os.getenv("TELEGRAM_NOTIFICATIONS_ENABLED", "true").lower() == "true"
+    telegram_notify_on_sentiment: list = ["strong buy", "moderate buy"]  # Sentiments to notify on
+
     class Config:
         env_file = ".env"
