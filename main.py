@@ -14,7 +14,6 @@ from config.settings import Settings
 from utils.logger import Logger
 from utils.dashboard_launcher import launch_dashboard
 from utils.telegram_notifier import TelegramNotifier
-import config.settings as settings
 
 from datetime import datetime
 
@@ -25,11 +24,6 @@ logger_instance = Logger(
 )
 logger = logger_instance.get_logger()
 
-# Initialize Telegram notifier
-telegram_notifier = None
-if settings.telegram_bot_token and settings.telegram_notifications_enabled:
-    telegram_notifier = TelegramNotifier(settings.telegram_bot_token, settings.telegram_chat_id)
-    logger.info("Telegram notifications enabled")
 
 # Initialize components
 settings = Settings()
@@ -41,6 +35,12 @@ kucoin_client = KuCoinClient(
 )
 analysis_engine = AnalysisEngine()
 
+# Initialize Telegram notifier
+telegram_notifier = None
+if settings.telegram_bot_token and settings.telegram_notifications_enabled:
+    telegram_notifier = TelegramNotifier(settings.telegram_bot_token, settings.telegram_chat_id)
+    logger.info("Telegram notifications enabled")
+    
 @logger_instance.performance_monitor("analyze_symbol")
 def analyze_symbol(symbol):
     """
