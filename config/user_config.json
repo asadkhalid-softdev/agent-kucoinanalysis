@@ -1,0 +1,21 @@
+{
+    "analysis": {
+      "interval": 60,
+      "timeframes": ["15min", "1hour", "4hour", "1day"],
+      "indicators": [
+        "RSI", "MACD", "BBANDS", "SMA", "EMA", 
+        "OBV", "STOCH", "ADX", "FIBONACCI"
+      ]
+    },
+    "display": {
+      "theme": "dark",
+      "decimal_places": 2,
+      "show_all_indicators": true
+    },
+    "notifications": {
+      "enabled": false,
+      "email": "",
+      "strong_signals_only": true
+    }
+  }
+  
