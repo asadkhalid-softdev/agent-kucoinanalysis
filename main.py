@@ -15,7 +15,7 @@ from utils.logger import Logger
 from utils.dashboard_launcher import launch_dashboard
 from utils.telegram_notifier import TelegramNotifier
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # Initialize logger
 logger_instance = Logger(
@@ -23,7 +23,6 @@ logger_instance = Logger(
     log_dir="logs"
 )
 logger = logger_instance.get_logger()
-
 
 # Initialize components
 settings = Settings()
@@ -35,12 +34,15 @@ kucoin_client = KuCoinClient(
 )
 analysis_engine = AnalysisEngine()
 
+# Initialize symbols from KuCoin instead of using symbols.json
+symbol_storage.initialize_symbols_from_kucoin(kucoin_client)
+
 # Initialize Telegram notifier
 telegram_notifier = None
 if settings.telegram_bot_token and settings.telegram_notifications_enabled:
     telegram_notifier = TelegramNotifier(settings.telegram_bot_token, settings.telegram_chat_id)
     logger.info("Telegram notifications enabled")
-    
+
 @logger_instance.performance_monitor("analyze_symbol")
 def analyze_symbol(symbol):
     """
@@ -202,6 +204,11 @@ def analyze_all_symbols():
     
     logger.info("Analysis cycle completed")
 
+def refresh_symbols():
+    """Refresh the list of symbols from KuCoin"""
+    logger.info("Refreshing symbols from KuCoin")
+    symbol_storage.initialize_symbols_from_kucoin(kucoin_client)
+
 def start_scheduler():
     """Start the background scheduler for periodic analysis"""
     scheduler = BackgroundScheduler()
@@ -211,6 +218,14 @@ def start_scheduler():
         minutes=settings.analysis_interval,
         next_run_time=None
     )
+
+    scheduler.add_job(
+        refresh_symbols, 
+        'interval', 
+        hours=12,  # Refresh once a day
+        next_run_time=datetime.now() + timedelta(minutes=5)  # First run after 5 minutes
+    )
+    
     scheduler.start()
     logger.info(f"Scheduler started with {settings.analysis_interval} minute interval")
 

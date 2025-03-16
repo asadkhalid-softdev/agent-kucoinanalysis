@@ -234,6 +234,35 @@ class KuCoinClient:
             
         return response
     
+    def get_symbols(self, use_cache=True, cache_ttl=3600):
+        """
+        Get list of symbol pairs with caching.
+        
+        Args:
+            use_cache (bool): Whether to use cache
+            cache_ttl (int): Cache time-to-live in seconds
+            
+        Returns:
+            list: List of symbol data dictionaries
+        """
+        endpoint = "/api/v1/symbols"
+        
+        if use_cache:
+            cached_data = self.cache.get(endpoint, ttl=cache_ttl)
+            if cached_data:
+                return cached_data
+        
+        response = self._request("GET", endpoint)
+        
+        if "error" not in response and use_cache:
+            self.cache.set(endpoint, response)
+            
+        # Extract the data array from the response
+        if "data" in response:
+            return response["data"]
+        else:
+            return []
+    
     def get_all_tickers(self, use_cache=True, cache_ttl=60):
         """
         Get ticker information for all trading pairs with caching.

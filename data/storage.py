@@ -109,6 +109,7 @@ class SymbolStorage:
                 json.dump(symbols, f, indent=2)
         except Exception as e:
             self.logger.error(f"Error saving symbols file: {str(e)}")
+
     def store_analysis(self, symbol: str, analysis: Dict[str, Any]) -> bool:
         """
         Store analysis result for a symbol
@@ -136,8 +137,8 @@ class SymbolStorage:
             with open(history_file, 'w') as f:
                 json.dump(analysis, f, indent=2)
             
-            # Maintain history limit (keep last 100 analyses)
-            self._prune_history(symbol_dir, 100)
+            # Maintain history limit (keep last 10 analyses)
+            self._prune_history(symbol_dir, 10)
             
             return True
         except Exception as e:
@@ -225,3 +226,83 @@ class SymbolStorage:
                     os.remove(os.path.join(symbol_dir, file))
         except Exception as e:
             self.logger.error(f"Error pruning history in {symbol_dir}: {str(e)}")
+
+    def fetch_symbols_from_kucoin(self, kucoin_client):
+        """
+        Fetch all available symbols from KuCoin API and filter according to requirements
+        
+        Args:
+            kucoin_client: KuCoin client instance
+            
+        Returns:
+            List[str]: Filtered list of symbols
+        """
+        try:
+            # Get all symbols from KuCoin
+            response = kucoin_client.get_symbols()
+            response = response.get("data", [])
+            
+            if "error" in response:
+                self.logger.error(f"Error fetching symbols: {response['error']}")
+                return []
+            
+            # Filter symbols based on requirements
+            filtered_symbols = []
+            
+            import re
+            for symbol_data in response:
+                symbol = symbol_data.get("symbol")
+                base_currency = symbol_data.get("baseCurrency")
+                quote_currency = symbol_data.get("quoteCurrency")
+                
+                # Skip if any required field is missing
+                if not all([symbol, base_currency, quote_currency]):
+                    continue
+                    
+                # Keep only USDT quote currency
+                if quote_currency != "USDT":
+                    continue
+                    
+                # Skip symbols ending with UP or DOWN
+                if symbol.endswith("UP") or symbol.endswith("DOWN"):
+                    continue
+                    
+                # Skip symbols with numbers in base currency
+                if re.search(r'\d', base_currency.lower()):
+                    continue
+                    
+                filtered_symbols.append(symbol)
+            
+            self.logger.info(f"Fetched {len(filtered_symbols)} symbols from KuCoin after filtering")
+            return filtered_symbols
+            
+        except Exception as e:
+            self.logger.error(f"Error fetching symbols from KuCoin: {str(e)}")
+            return []
+
+    def initialize_symbols_from_kucoin(self, kucoin_client):
+        """
+        Initialize symbols list from KuCoin API
+        
+        Args:
+            kucoin_client: KuCoin client instance
+            
+        Returns:
+            bool: True if successful
+        """
+        try:
+            # Fetch symbols from KuCoin
+            symbols = self.fetch_symbols_from_kucoin(kucoin_client)
+            
+            if not symbols:
+                self.logger.warning("No symbols fetched from KuCoin, keeping existing symbols")
+                return False
+            
+            # Save the symbols
+            self._save_symbols(symbols)
+            self.logger.info(f"Initialized {len(symbols)} symbols from KuCoin")
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Error initializing symbols from KuCoin: {str(e)}")
+            return False

@@ -317,3 +317,93 @@ Response:
 
 
 ## For more details, see the [API Documentation](http://localhost:8000/docs) when the server is running.
+
+## Telegram Integration
+
+The KuCoin Spot Analysis Bot includes Telegram integration to send real-time notifications for significant trading signals and allow interaction with the bot through commands.
+
+### Setup Instructions
+
+1. **Create a Telegram Bot**:
+    - Open Telegram and search for "BotFather" (@BotFather)
+    - Start a chat and send the command `/newbot`
+    - Follow the prompts to name your bot and create a username
+    - Save the API token provided by BotFather
+2. **Configure Your Bot**:
+    - Add the following to your `.env` file:
+
+```
+TELEGRAM_BOT_TOKEN=your_bot_token_here
+TELEGRAM_CHAT_ID=
+TELEGRAM_NOTIFICATIONS_ENABLED=true
+```
+
+3. **Get Your Chat ID**:
+    - Run the utility script:
+
+```
+python -m utils.get_telegram_chat_id
+```
+
+    - Send a message to your bot in Telegram
+    - The script will display your chat ID
+    - Add this ID to your `.env` file:
+
+```
+TELEGRAM_CHAT_ID=your_chat_id_here
+```
+
+4. **Test the Integration**:
+    - Run the test script:
+
+```
+python -m utils.test_telegram
+```
+
+    - You should receive a test notification in Telegram
+
+### Notification Features
+
+The bot will automatically send you alerts when:
+
+- A symbol develops a strong buy signal
+- A symbol develops a strong sell signal
+- Any critical system errors occur
+
+Notifications include:
+
+- Current price
+- Sentiment strength and direction
+- Confidence level
+- Key indicator values
+- Analysis summary
+
+### Customizing Notifications
+
+You can customize which sentiment levels trigger notifications by modifying the `telegram_notify_on_sentiment` setting in your configuration:
+
+```python
+# Default setting (in config/settings.py)
+telegram_notify_on_sentiment: list = ["strong buy", "strong sell"]
+
+# To add more notification triggers, modify to include additional sentiments:
+telegram_notify_on_sentiment: list = ["strong buy", "strong sell", "moderate buy"]
+```
+
+
+### Security Considerations
+
+- Never share your bot token publicly
+- Regenerate your bot token if you suspect it has been compromised
+- Consider using a private Telegram group for notifications if multiple people need access
+
+
+### Troubleshooting
+
+If you're not receiving notifications:
+
+1. Ensure `TELEGRAM_NOTIFICATIONS_ENABLED` is set to `true`
+2. Verify your bot token is correct
+3. Make sure you've sent at least one message to your bot
+4. Check that your chat ID is correctly configured
+5. Look for any errors in the application logs
