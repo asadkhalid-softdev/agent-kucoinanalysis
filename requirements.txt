@@ -30,3 +30,4 @@ psutil==5.9.5
 # Testing
 pytest==7.4.2
 pytest-asyncio==0.21.1
+dateparser
