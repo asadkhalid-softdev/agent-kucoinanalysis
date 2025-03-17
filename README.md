@@ -427,7 +427,7 @@ telegram_notify_on_sentiment: list = ["strong buy", "moderate buy"]
 
 If you're not receiving notifications:
 
-1. Ensure `TELEGRAM_NOTIFICATIONS_ENABLED` is set to `true`
+1. Ensure `telegram_notifications_enabled` in `config\user_config.json` is set to `true`
 2. Verify your bot token is correct
 3. Make sure you've sent at least one message to your bot
 4. Check that your chat ID is correctly configured
