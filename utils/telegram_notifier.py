@@ -208,7 +208,7 @@ class TelegramNotifier:
                     elif name.startswith("MACD"):
                         if isinstance(indicator['value'], dict):
                             histogram = indicator['value'].get('histogram', 0)
-                            message += f"• MACD Histogram: {histogram:.2f}\n"
+                            message += f"• MACD Histogram: {histogram}\n"
                     elif name.startswith("BBANDS"):
                         if isinstance(indicator['value'], dict):
                             percent_b = indicator['value'].get('percent_b', 0.5)
