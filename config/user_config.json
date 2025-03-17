@@ -2,15 +2,14 @@
     "analysis": {
       "interval": 1,
       "main_timeframe": "1hour",
-      "timeframes": ["1hour", "1day"],
+      "timeframes": ["1hour"],
       "indicators": [
-        "RSI", "MACD", "BBANDS", "SMA", "EMA", 
-        "OBV", "STOCH", "ADX", "FIBONACCI"
+        "RSI", "MACD", "BBANDS"
       ]
     },
     "telegram": {
       "telegram_notify_on_sentiment": ["strong buy", "moderate buy"],
-      "telegram_notify_on_confidence": 0.0,
+      "telegram_notify_on_confidence": 0.75,
       "telegram_notifications_enabled": true
     },
     "display": {
