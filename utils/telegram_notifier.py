@@ -111,20 +111,17 @@ class TelegramNotifier:
             last_sentiment = last_notification.get("sentiment", {})
             
             # If last notification is within cooldown period
-            if last_timestamp and now - last_timestamp < timedelta(hours=self.notification_cooldown):
-                # Check if sentiment has changed significantly
-                if (last_sentiment.get("overall") == sentiment.get("overall") and 
-                    last_sentiment.get("strength") == sentiment.get("strength")):
-                    # Same sentiment, don't notify again
-                    self.logger.info(f"Skipping notification for {symbol}: last notification was {(now - last_timestamp).total_seconds() / 3600:.1f} hours ago with same sentiment")
-                    return False
+            if (last_timestamp and now - last_timestamp < timedelta(hours=self.notification_cooldown)) or last_sentiment.get("confidence") < sentiment.get("confidence"):
+                self.logger.info(f"Skipping notification for {symbol}: last notification was {(now - last_timestamp).total_seconds() / 3600:.1f} hours ago with same sentiment")
+                return False
         
         # Store this notification
         self.recent_notifications[symbol] = {
             "timestamp": now,
             "sentiment": {
                 "overall": sentiment.get("overall"),
-                "strength": sentiment.get("strength")
+                "strength": sentiment.get("strength"),
+                "confidence": sentiment.get("confidence")
             }
         }
         self._save_notifications()
