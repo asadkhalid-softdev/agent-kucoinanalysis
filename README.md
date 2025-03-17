@@ -406,14 +406,26 @@ Notifications include:
 - Key indicator values
 - Analysis summary
 
+``` 
+🚨 GOATS-USDT Alert: MODERATE BUY
+
+💰 Current Price: $9.045e-05
+🎯 Sentiment: moderate buy
+🔍 Confidence: 0.76
+
+GOATS-USDT is trading at 9.045e-05 (0.16% change) Overall sentiment: moderate buy (confidence: 0.76) MACD shows bullish momentum
+
+Key Indicators:
+• RSI: 31.32
+• MACD Histogram: -4.171450619941169e-07
+• BB %B: 0.12
+
+Generated at 2025-03-17T02:42:31.721022
+```
+
 ### Customizing Notifications
 
-You can customize which sentiment levels trigger notifications by modifying the `telegram_notify_on_sentiment` setting in your configuration:
-
-```python
-# To add more notification triggers, modify to include additional sentiments:
-telegram_notify_on_sentiment: list = ["strong buy", "moderate buy"]
-```
+You can customize which sentiment levels trigger notifications by modifying the `telegram_notify_on_sentiment` setting in your configuration `config\user_config.json`.
 
 
 ### Security Considerations
