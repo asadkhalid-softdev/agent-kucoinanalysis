@@ -66,6 +66,10 @@ python main.py
 
 The bot provides a RESTful API for managing symbols and accessing analysis results.
 
+api: http://localhost:8000/docs#
+
+dashboard: http://localhost:8050/
+
 ### Authentication
 
 All API endpoints (except `/docs` and `/redoc`) require authentication using JWT tokens.
