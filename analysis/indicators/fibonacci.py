@@ -61,7 +61,7 @@ class FibonacciRetracement:
         for level, price in sorted_levels:
             if price <= current_price:
                 below_level = (level, price)
-            else:
+            elif price > current_price:
                 above_level = (level, price)
                 break
         
@@ -133,7 +133,7 @@ class FibonacciRetracement:
         signal = "neutral"
         strength = 0.0
         
-        if closest_level and distance_pct < 0.01:  # Within 1% of a level
+        if closest_level and distance_pct is not None and distance_pct < 0.01:  # Within 1% of a level
             level_value = closest_level[0]
             
             # Price near support
@@ -162,7 +162,7 @@ class FibonacciRetracement:
                 "closest_price": closest_level[1] if closest_level else None,
                 "distance_pct": distance_pct,
                 "next_level_above": next_level_above[0] if next_level_above else None,
-                "next_level_price": next_level_above[1] if next_level_above else None,
+                "next_level_above_price": next_level_above[1] if next_level_above else None,  # Fixed field name
                 "potential_profit_pct": potential_profit_pct,
                 "next_level_below": next_level_below[0] if next_level_below else None,
                 "next_level_below_price": next_level_below[1] if next_level_below else None,
@@ -172,5 +172,3 @@ class FibonacciRetracement:
             "signal": signal,
             "strength": strength
         }
-
-

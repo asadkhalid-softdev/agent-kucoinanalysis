@@ -218,19 +218,19 @@ def analyze_symbol(symbol):
             sentiment_key = f"{sentiment.get('strength', 'none')} {sentiment.get('overall', 'neutral')}"
             volume = analysis.get("volume", 0.0)
 
-            risk_reward = None
+            risk_reward_ratio = None
             for name, indicator in analysis["indicators"].items():
                 if name.startswith("FIBONACCI"):
                     if isinstance(indicator['value'], dict):
-                        risk_reward = indicator['value'].get('risk_reward_ratio')
-            if not risk_reward:
-                risk_reward = settings.telegram_notify_on_plr
+                        risk_reward_ratio = indicator['value'].get('risk_reward_ratio')
+            if not risk_reward_ratio:
+                risk_reward_ratio = settings.telegram_notify_on_plr
             
             # Send notification for strong buy signals
             if sentiment_key.lower() in settings.telegram_notify_on_sentiment and \
             confidence >= settings.telegram_notify_on_confidence and \
             volume >= settings.telegram_notify_on_volume and \
-            risk_reward >= settings.telegram_notify_on_plr:
+            risk_reward_ratio >= settings.telegram_notify_on_plr:
                 logger.info(f"Sending Telegram notification for {symbol}: {sentiment_key}")
                 # The notifier will now check internally if the notification should be sent
                 telegram_notifier.send_analysis_alert(symbol, analysis)

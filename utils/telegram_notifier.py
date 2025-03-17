@@ -219,26 +219,20 @@ class TelegramNotifier:
                         if isinstance(indicator['value'], dict):
                             closest_level = indicator['value'].get('closest_level')
                             closest_price = indicator['value'].get('closest_price')
-                            next_level = indicator['value'].get('next_level_above')
-                            next_price = indicator['value'].get('next_level_price')
-                            profit_pct = indicator['value'].get('potential_profit_pct')
-                            below_level = indicator['value'].get('next_level_below')
-                            below_price = indicator['value'].get('next_level_below_price')
-                            loss_pct = indicator['value'].get('potential_loss_pct')
-                            risk_reward = indicator['value'].get('risk_reward_ratio')
+                            next_level_above = indicator['value'].get('next_level_above')
+                            next_level_above_price = indicator['value'].get('next_level_above_price')
+                            potential_profit_pct = indicator['value'].get('potential_profit_pct')
+                            next_level_below = indicator['value'].get('next_level_below')
+                            next_level_below_price = indicator['value'].get('next_level_below_price')
+                            potential_loss_pct = indicator['value'].get('potential_loss_pct')
+                            risk_reward_ratio = indicator['value'].get('risk_reward_ratio')
                             
                             fib_message = f"• Fibonacci: Near {closest_level} level (${closest_price})"
-                            
-                            if next_level and next_price and profit_pct:
-                                fib_message += f"\n🤑  Target: {next_level} (${next_price}, +{profit_pct:.2f}%)"
-                            else:
-                                self.logger.error([next_level, next_price, profit_pct])
+                            fib_message += f"\n🤑  Target: {next_level_above} (${next_level_above_price}, +{potential_profit_pct:.2f}%)"
+                            fib_message += f"\n📉  Stop: {next_level_below} (${next_level_below_price}, -{potential_loss_pct:.2f}%)"
                                 
-                            if below_level and below_price and loss_pct:
-                                fib_message += f"\n📉  Stop: {below_level} (${below_price}, -{loss_pct:.2f}%)"
-                                
-                            if risk_reward is not None:
-                                fib_message += f"\n  Risk/Reward: {risk_reward:.2f}"
+                            if risk_reward_ratio is not None:
+                                fib_message += f"\n  Risk/Reward: {risk_reward_ratio:.2f}"
                             
                             message += fib_message + "\n"
 
