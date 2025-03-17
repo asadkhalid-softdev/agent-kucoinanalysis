@@ -40,6 +40,7 @@ class Settings(BaseSettings):
     telegram_notify_on_confidence: float = user_config.get_config().get("telegram", {}).get("telegram_notify_on_confidence", 0)
     telegram_notify_on_volume: float = user_config.get_config().get("telegram", {}).get("telegram_notify_on_volume", 100000)
     telegram_notify_on_plr: float = user_config.get_config().get("telegram", {}).get("telegram_notify_on_plr", 0.0)
+    telegram_notify_on_rsi_buy: float = user_config.get_config().get("telegram", {}).get("telegram_notify_on_rsi_buy", 100)
 
     class Config:
         env_file = ".env"
