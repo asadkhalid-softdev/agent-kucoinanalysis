@@ -45,3 +45,4 @@ stress_test_results/
 .dockerignore
 
 structure.md
+data/telegram/recent_notifications.json
