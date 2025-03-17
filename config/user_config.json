@@ -2,7 +2,7 @@
     "analysis": {
       "interval": 1,
       "main_timeframe": "1hour",
-      "timeframes": ["1hour","1day"],
+      "timeframes": ["15min","1hour"],
       "indicators": [
         "RSI", "MACD", "BBANDS", "FIBONACCI"
       ]
