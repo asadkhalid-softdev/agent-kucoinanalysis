@@ -43,7 +43,7 @@ class SentimentAnalyzer:
         """Convert string signal to numerical value."""
         return self.SIGNAL_WEIGHTS.get(signal, 0.0)
     
-    def analyze(self, indicator_signals):
+    def analyze(self, indicator_signals, df):
         """
         Analyze multiple indicator signals to determine overall sentiment.
         
@@ -58,7 +58,8 @@ class SentimentAnalyzer:
                 "overall": "neutral",
                 "strength": "none",
                 "confidence": 0.0,
-                "score": 0.0
+                "score": 0.0,
+                "volume": 0.0
             }
         
         # Group signals by indicator type to avoid overweighting multiple instances
@@ -122,5 +123,6 @@ class SentimentAnalyzer:
             "overall": overall,
             "strength": strength,
             "confidence": round(confidence, 2),
-            "score": round(weighted_score, 2)
+            "score": round(weighted_score, 2),
+            "volume": df['volume'].iloc[-1]
         }

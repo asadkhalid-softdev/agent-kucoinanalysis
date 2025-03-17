@@ -66,30 +66,63 @@ def analyze_symbol(symbol):
         primary_tf = settings.main_timeframe
         
         for timeframe in settings.default_timeframes:
-            
             # Calculate appropriate start time based on timeframe
             if timeframe == "1week":
-                # Get 200 days of data
-                start_time = "1 year ago"
-                # Need at least 50 days for meaningful analysis
-                min_candles = 50
+                # Get 5 years of weekly data (260 candles)
+                start_time = int(time.time() - (86400 * 365 * 5))
+                min_candles = 50  # About 1 year of weekly data
+            elif timeframe == "3day":
+                # Get 3 years of 3-day data (365 candles)
+                start_time = int(time.time() - (86400 * 365 * 3))
+                min_candles = 60  # About 6 months of 3-day data
             elif timeframe == "1day":
-                # Get 200 days of data
-                start_time = "200 days ago"
-                # Need at least 50 days for meaningful analysis
-                min_candles = 200
+                # Get 1 year of daily data (365 candles)
+                start_time = int(time.time() - (86400 * 365))
+                min_candles = 100  # About 3-4 months of daily data
+            elif timeframe == "12hour":
+                # Get 180 days of 12h data (360 candles)
+                start_time = int(time.time() - (86400 * 180))
+                min_candles = 120  # About 60 days of 12h data
+            elif timeframe == "8hour":
+                # Get 120 days of 8h data (360 candles)
+                start_time = int(time.time() - (86400 * 120))
+                min_candles = 150  # About 50 days of 8h data
+            elif timeframe == "6hour":
+                # Get 90 days of 6h data (360 candles)
+                start_time = int(time.time() - (86400 * 90))
+                min_candles = 160  # About 40 days of 6h data
             elif timeframe == "4hour":
-                # Get 60 days of 4h data (240 candles)
-                start_time = "60 days ago"
-                min_candles = 200
+                # Get 60 days of 4h data (360 candles)
+                start_time = int(time.time() - (86400 * 60))
+                min_candles = 180  # About 30 days of 4h data
+            elif timeframe == "2hour":
+                # Get 30 days of 2h data (360 candles)
+                start_time = int(time.time() - (86400 * 30))
+                min_candles = 200  # About 17 days of 2h data
             elif timeframe == "1hour":
-                # Get 14 days of hourly data (336 candles)
-                start_time = "14 days ago"
-                min_candles = 200
-            else:  # "15min"
-                # Get 5 days of 15min data (480 candles)
-                start_time = "5 days ago"
-                min_candles = 300
+                # Get 21 days of hourly data (504 candles)
+                start_time = int(time.time() - (86400 * 21))
+                min_candles = 240  # About 10 days of hourly data
+            elif timeframe == "30min":
+                # Get 14 days of 30min data (672 candles)
+                start_time = int(time.time() - (86400 * 14))
+                min_candles = 288  # About 6 days of 30min data
+            elif timeframe == "15min":
+                # Get 7 days of 15min data (672 candles)
+                start_time = int(time.time() - (86400 * 7))
+                min_candles = 384  # About 4 days of 15min data
+            elif timeframe == "5min":
+                # Get 3 days of 5min data (864 candles)
+                start_time = int(time.time() - (86400 * 3))
+                min_candles = 576  # About 2 days of 5min data
+            elif timeframe == "1min":
+                # Get 1 day of 1min data (1440 candles)
+                start_time = int(time.time() - 86400)
+                min_candles = 720  # About 12 hours of 1min data
+            else:
+                # Default to 7 days
+                start_time = int(time.time() - (86400 * 7))
+                min_candles = 100
             
             # Try to get klines with retry logic
             retry_count = 0
@@ -104,6 +137,7 @@ def analyze_symbol(symbol):
                         end_time=current_time
                     )
                     klines = klines.get("data", [])
+                    time.sleep(0.5) 
 
                     # Check if we have enough data
                     if "error" not in klines and len(klines) >= min_candles:
@@ -180,10 +214,23 @@ def analyze_symbol(symbol):
         # Check if we should send a Telegram notification
         if telegram_notifier and "sentiment" in analysis and settings.telegram_notifications_enabled:
             sentiment = analysis["sentiment"]
+            confidence = sentiment.get("confidence", 0.0)
             sentiment_key = f"{sentiment.get('strength', 'none')} {sentiment.get('overall', 'neutral')}"
+            volume = analysis.get("volume", 0.0)
+
+            risk_reward = None
+            for name, indicator in analysis["indicators"].items():
+                if name.startswith("FIBONACCI"):
+                    if isinstance(indicator['value'], dict):
+                        risk_reward = indicator['value'].get('risk_reward_ratio')
+            if not risk_reward:
+                risk_reward = settings.telegram_notify_on_plr
             
             # Send notification for strong buy signals
-            if sentiment_key.lower() in settings.telegram_notify_on_sentiment and sentiment.get("confidence", 0.0) >= settings.telegram_notify_on_confidence:
+            if sentiment_key.lower() in settings.telegram_notify_on_sentiment and \
+            confidence >= settings.telegram_notify_on_confidence and \
+            volume >= settings.telegram_notify_on_volume and \
+            risk_reward >= settings.telegram_notify_on_plr:
                 logger.info(f"Sending Telegram notification for {symbol}: {sentiment_key}")
                 # The notifier will now check internally if the notification should be sent
                 telegram_notifier.send_analysis_alert(symbol, analysis)

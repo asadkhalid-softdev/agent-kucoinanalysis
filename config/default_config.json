@@ -9,9 +9,11 @@
       ]
     },
     "telegram": {
+      "telegram_notifications_enabled": true,
       "telegram_notify_on_sentiment": ["strong buy", "moderate buy"],
       "telegram_notify_on_confidence": 0.45,
-      "telegram_notifications_enabled": true
+      "telegram_notify_on_volume": 100000,
+      "telegram_notify_on_plr": 1
     },
     "display": {
       "theme": "dark",

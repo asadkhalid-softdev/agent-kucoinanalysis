@@ -121,7 +121,8 @@ class TelegramNotifier:
             "sentiment": {
                 "overall": sentiment.get("overall"),
                 "strength": sentiment.get("strength"),
-                "confidence": sentiment.get("confidence")
+                "confidence": sentiment.get("confidence"),
+                "volume": sentiment.get("volume")
             }
         }
         self._save_notifications()
@@ -185,16 +186,18 @@ class TelegramNotifier:
             overall = sentiment.get("overall", "neutral")
             strength = sentiment.get("strength", "none")
             confidence = sentiment.get("confidence", 0.0)
+            volume = analysis.get("volume", 0.0)
             price = analysis.get("price", 0.0)
             
             message = f"<b>🚨 {symbol} Alert: {strength.upper()} {overall.upper()}</b>\n\n"
             message += f"💰 Current Price: ${str(price)}\n"
             message += f"🎯 Sentiment: {strength} {overall}\n"
-            message += f"🔍 Confidence: {confidence:.2f}\n\n"
+            message += f"🔍 Confidence: {confidence:.2f}\n"
+            message += f"📊 Volume: {volume}\n\n"
             
             # Add summary if available
-            if "analysis_summary" in analysis:
-                message += f"<i>{analysis['analysis_summary']}</i>\n\n"
+            # if "analysis_summary" in analysis:
+            #     message += f"<i>{analysis['analysis_summary']}</i>\n\n"
             
             # Add indicators if available
             if "indicators" in analysis and analysis["indicators"]:
@@ -202,15 +205,43 @@ class TelegramNotifier:
                 for name, indicator in analysis["indicators"].items():
                     if name.startswith("RSI"):
                         message += f"• RSI: {indicator['value']:.2f}\n"
-                    elif name.startswith("MACD"):
+                    
+                    # elif name.startswith("MACD"):
+                    #     if isinstance(indicator['value'], dict):
+                    #         histogram = indicator['value'].get('histogram', 0)
+                    #         message += f"• MACD Histogram: {histogram}\n"
+                    # elif name.startswith("BBANDS"):
+                    #     if isinstance(indicator['value'], dict):
+                    #         percent_b = indicator['value'].get('percent_b', 0.5)
+                    #         message += f"• BB %B: {percent_b:.2f}\n"
+                    
+                    elif name.startswith("FIBONACCI"):
                         if isinstance(indicator['value'], dict):
-                            histogram = indicator['value'].get('histogram', 0)
-                            message += f"• MACD Histogram: {histogram}\n"
-                    elif name.startswith("BBANDS"):
-                        if isinstance(indicator['value'], dict):
-                            percent_b = indicator['value'].get('percent_b', 0.5)
-                            message += f"• BB %B: {percent_b:.2f}\n"
-            
+                            closest_level = indicator['value'].get('closest_level')
+                            closest_price = indicator['value'].get('closest_price')
+                            next_level = indicator['value'].get('next_level_above')
+                            next_price = indicator['value'].get('next_level_price')
+                            profit_pct = indicator['value'].get('potential_profit_pct')
+                            below_level = indicator['value'].get('next_level_below')
+                            below_price = indicator['value'].get('next_level_below_price')
+                            loss_pct = indicator['value'].get('potential_loss_pct')
+                            risk_reward = indicator['value'].get('risk_reward_ratio')
+                            
+                            fib_message = f"• Fibonacci: Near {closest_level} level (${closest_price})"
+                            
+                            if next_level and next_price and profit_pct:
+                                fib_message += f"\n🤑  Target: {next_level} (${next_price}, +{profit_pct:.2f}%)"
+                            else:
+                                self.logger.error([next_level, next_price, profit_pct])
+                                
+                            if below_level and below_price and loss_pct:
+                                fib_message += f"\n📉  Stop: {below_level} (${below_price}, -{loss_pct:.2f}%)"
+                                
+                            if risk_reward is not None:
+                                fib_message += f"\n  Risk/Reward: {risk_reward:.2f}"
+                            
+                            message += fib_message + "\n"
+
             message += f"\n<i>Generated at {analysis.get('timestamp', 'N/A')}</i>"
             
             return self.send_message(message, chat_id)

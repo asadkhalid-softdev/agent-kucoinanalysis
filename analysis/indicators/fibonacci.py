@@ -5,7 +5,7 @@ class FibonacciRetracement:
     def __init__(self, period=100):
         self.period = period
         self.name = f"FIBONACCI_{period}"
-        self.levels = [0.0, 0.236, 0.382, 0.5, 0.618, 0.786, 1.0]
+        self.levels = [0.0, 0.236, 0.382, 0.5, 0.618, 0.786, 1.0, 1.272, 1.618, 2.0, 2.618, 4.236]
     
     def calculate(self, df):
         """Calculate Fibonacci Retracement levels
@@ -86,6 +86,49 @@ class FibonacciRetracement:
             closest_level = above_level
             distance_pct = (above_level[1] - current_price) / current_price
         
+        # Find next level above for potential profit target
+        next_level_above = None
+        potential_profit_pct = None
+        
+        if above_level:
+            next_level_above = above_level
+            potential_profit_pct = (next_level_above[1] - current_price) / current_price * 100
+        
+        # Find next significant level above (if current level is not the highest)
+        if above_level and sorted_levels[-1] != above_level:
+            # Find the index of the above_level in sorted_levels
+            for i, (level, price) in enumerate(sorted_levels):
+                if level == above_level[0] and price == above_level[1]:
+                    # If there's a next level, use it as the target
+                    if i + 1 < len(sorted_levels):
+                        next_level_above = sorted_levels[i + 1]
+                        potential_profit_pct = (next_level_above[1] - current_price) / current_price * 100
+                    break
+        
+        # Find next level below for potential stop loss
+        next_level_below = None
+        potential_loss_pct = None
+        
+        if below_level:
+            next_level_below = below_level
+            potential_loss_pct = (current_price - next_level_below[1]) / current_price * 100
+        
+        # Find next significant level below (if current level is not the lowest)
+        if below_level and sorted_levels[0] != below_level:
+            # Find the index of the below_level in sorted_levels
+            for i, (level, price) in enumerate(sorted_levels):
+                if level == below_level[0] and price == below_level[1]:
+                    # If there's a previous level, use it as the stop loss
+                    if i > 0:
+                        next_level_below = sorted_levels[i - 1]
+                        potential_loss_pct = (current_price - next_level_below[1]) / current_price * 100
+                    break
+        
+        # Calculate risk/reward ratio
+        risk_reward_ratio = None
+        if potential_profit_pct is not None and potential_loss_pct is not None and potential_loss_pct > 0:
+            risk_reward_ratio = potential_profit_pct / potential_loss_pct
+        
         # Determine signal
         signal = "neutral"
         strength = 0.0
@@ -116,8 +159,18 @@ class FibonacciRetracement:
             "value": {
                 "levels": fib_levels["levels"],
                 "closest_level": closest_level[0] if closest_level else None,
-                "distance_pct": distance_pct
+                "closest_price": closest_level[1] if closest_level else None,
+                "distance_pct": distance_pct,
+                "next_level_above": next_level_above[0] if next_level_above else None,
+                "next_level_price": next_level_above[1] if next_level_above else None,
+                "potential_profit_pct": potential_profit_pct,
+                "next_level_below": next_level_below[0] if next_level_below else None,
+                "next_level_below_price": next_level_below[1] if next_level_below else None,
+                "potential_loss_pct": potential_loss_pct,
+                "risk_reward_ratio": risk_reward_ratio
             },
             "signal": signal,
             "strength": strength
         }
+
+

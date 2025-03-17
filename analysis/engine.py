@@ -29,6 +29,7 @@ class AnalysisEngine:
     def _initialize_indicators(self):
         """Initialize technical indicators based on configuration."""
         indicators = []
+        self.biggest_window = 50
         
         # Add default indicators or use configuration if provided
         analysis_list = self.config.get('analysis', [])
@@ -98,10 +99,7 @@ class AnalysisEngine:
                     self.logger.error(f"Error calculating {indicator.name} for {symbol}: {str(e)}")
             
             # Analyze sentiment
-            sentiment = self.sentiment_analyzer.analyze(indicator_signals)
-            
-            # Get current price
-            current_price = df['close'].iloc[-1]
+            sentiment = self.sentiment_analyzer.analyze(indicator_signals, df)
             
             # Prepare analysis summary
             summary = self._generate_summary(symbol, df, indicator_results, sentiment)
@@ -109,10 +107,11 @@ class AnalysisEngine:
             return {
                 "symbol": symbol,
                 "timestamp": datetime.now().isoformat(),
-                "price": current_price,
+                "price": df['close'].iloc[-1],
                 "indicators": indicator_results,
                 "sentiment": sentiment,
-                "analysis_summary": summary
+                "analysis_summary": summary,
+                "volume": df['volume'].iloc[-1]
             }
             
         except Exception as e:
