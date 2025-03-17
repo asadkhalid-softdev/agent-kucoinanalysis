@@ -5,7 +5,6 @@ An AI-powered technical analysis bot for cryptocurrency markets using the KuCoin
 ## Features
 
 - Real-time technical analysis of cryptocurrency markets
-- Multi-timeframe analysis for comprehensive market insights
 - Sentiment analysis combining multiple technical indicators
 - RESTful API for easy integration with other systems
 - Configurable analysis parameters and indicators
@@ -15,7 +14,7 @@ An AI-powered technical analysis bot for cryptocurrency markets using the KuCoin
 
 ### Prerequisites
 
-- Python 3.8 or higher
+- Python 3.10 or higher
 - KuCoin API credentials (optional for public endpoints)
 - Internet connection
 
@@ -24,8 +23,8 @@ An AI-powered technical analysis bot for cryptocurrency markets using the KuCoin
 1. Clone the repository:
 
 ```
-git clone https://github.com/yourusername/kucoin-analysis-bot.git
-cd kucoin-analysis-bot
+git clone https://github.com/asadkhalid-softdev/aiagent-kucoinanalysis.git
+cd aiagent-kucoinanalysis
 ```
 
 
@@ -382,7 +381,6 @@ Notifications include:
 You can customize which sentiment levels trigger notifications by modifying the `telegram_notify_on_sentiment` setting in your configuration:
 
 ```python
-
 # To add more notification triggers, modify to include additional sentiments:
 telegram_notify_on_sentiment: list = ["strong buy", "moderate buy"]
 ```
