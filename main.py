@@ -61,6 +61,9 @@ def analyze_symbol(symbol):
         # Get klines data for different timeframes
         timeframe_data = {}
         current_time = int(time.time())
+
+        settings = Settings()
+        primary_tf = settings.main_timeframe
         
         for timeframe in settings.default_timeframes:
             
@@ -132,7 +135,7 @@ def analyze_symbol(symbol):
             })
             return
             
-        if main_tf not in timeframe_data:
+        if primary_tf not in timeframe_data:
             logger.warning(f"Missing primary timeframe (1hour) data for {symbol}")
             # Try to use 4hour or 15min as fallback
             primary_tf = next(iter(timeframe_data.keys())) if timeframe_data else None
@@ -146,8 +149,6 @@ def analyze_symbol(symbol):
                 })
                 return
             logger.info(f"Using {primary_tf} as fallback timeframe for {symbol}")
-        else:
-            primary_tf = main_tf
             
         # Get current price for the symbol
         try:
@@ -177,12 +178,12 @@ def analyze_symbol(symbol):
         logger.info(f"Analysis completed for {symbol} using {len(timeframe_data)} timeframes")
         
         # Check if we should send a Telegram notification
-        if telegram_notifier and "sentiment" in analysis:
+        if telegram_notifier and "sentiment" in analysis and settings.telegram_notifications_enabled:
             sentiment = analysis["sentiment"]
             sentiment_key = f"{sentiment.get('strength', 'none')} {sentiment.get('overall', 'neutral')}"
             
             # Send notification for strong buy signals
-            if sentiment_key.lower() in settings.telegram_notify_on_sentiment:
+            if sentiment_key.lower() in settings.telegram_notify_on_sentiment and sentiment.get("confidence", 0.0) >= settings.telegram_notify_on_confidence:
                 logger.info(f"Sending Telegram notification for {symbol}: {sentiment_key}")
                 # The notifier will now check internally if the notification should be sent
                 telegram_notifier.send_analysis_alert(symbol, analysis)
@@ -290,9 +291,6 @@ if __name__ == "__main__":
         # Create required directories
         os.makedirs("logs", exist_ok=True)
         os.makedirs("data/storage", exist_ok=True)
-
-        main_tf = settings.main_timeframe
-        logger.info(f"Primary timeframe set to: {main_tf}")
         
         # Start the monitoring dashboard
         start_dashboard()

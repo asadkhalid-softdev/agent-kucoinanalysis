@@ -10,7 +10,7 @@
     },
     "telegram": {
       "telegram_notify_on_sentiment": ["strong buy", "moderate buy"],
-      "telegram_notify_on_confidence": 0.0,
+      "telegram_notify_on_confidence": 0.45,
       "telegram_notifications_enabled": true
     },
     "display": {

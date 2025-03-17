@@ -17,6 +17,7 @@ class UserConfig:
         """
         self.config_dir = config_dir
         self.config_file = os.path.join(config_dir, "user_config.json")
+        self.default_config_file = os.path.join(config_dir, "default_config.json")
         self.logger = logging.getLogger(__name__)
         
         # Create directory if it doesn't exist
@@ -33,26 +34,8 @@ class UserConfig:
         Returns:
             Dict[str, Any]: Default configuration
         """
-        return {
-            "analysis": {
-                "interval": 60,  # minutes
-                "timeframes": ["1hour"], #["15min", "1hour", "4hour", "1day"],
-                "indicators": [
-                    "RSI", "MACD", "BBANDS", "SMA", "EMA", 
-                    "OBV", "STOCH", "ADX", "FIBONACCI"
-                ]
-            },
-            "display": {
-                "theme": "dark",
-                "decimal_places": 2,
-                "show_all_indicators": True
-            },
-            "notifications": {
-                "enabled": False,
-                "email": "",
-                "strong_signals_only": True
-            }
-        }
+        with open(self.default_config_file, 'r') as f:
+            return json.load(f)
     
     def get_config(self) -> Dict[str, Any]:
         """

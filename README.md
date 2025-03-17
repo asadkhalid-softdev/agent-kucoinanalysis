@@ -49,6 +49,7 @@ pip install -r requirements.txt
 KUCOIN_API_KEY=your_api_key
 KUCOIN_API_SECRET=your_api_secret
 KUCOIN_API_PASSPHRASE=your_api_passphrase
+
 API_USERNAME=admin
 API_PASSWORD=secure_password
 SECRET_KEY=your_jwt_secret_key
@@ -260,28 +261,36 @@ Response:
 
 GET /api/config
 
+**`interval (in mins)`**
+
 ```
 Response:
 {
-"analysis": {
-"interval": 60,
-"timeframes": ["15min", "1hour", "4hour", "1day"],
-"indicators": [
-"RSI", "MACD", "BBANDS", "SMA", "EMA",
-"OBV", "STOCH", "ADX", "FIBONACCI"
-]
-},
-"display": {
-"theme": "dark",
-"decimal_places": 2,
-"show_all_indicators": true
-},
-"notifications": {
-"enabled": false,
-"email": "",
-"strong_signals_only": true
-}
-}
+    "analysis": {
+      "interval": 1,
+      "main_timeframe": "1hour",
+      "timeframes": ["1hour", "1day"],
+      "indicators": [
+        "RSI", "MACD", "BBANDS", "SMA", "EMA", 
+        "OBV", "STOCH", "ADX", "FIBONACCI"
+      ]
+    },
+    "telegram": {
+      "telegram_notify_on_sentiment": ["strong buy", "moderate buy"],
+      "telegram_notify_on_confidence": 0.45,
+      "telegram_notifications_enabled": true
+    },
+    "display": {
+      "theme": "dark",
+      "decimal_places": 2,
+      "show_all_indicators": true
+    },
+    "notifications": {
+      "enabled": false,
+      "email": "",
+      "strong_signals_only": true
+    }
+  }
 ```
 
 
@@ -290,12 +299,30 @@ Response:
 PUT /api/config
 Content-Type: application/json
 
+```
 {
-"analysis": {
-"interval": 30,
-"indicators": ["RSI", "MACD", "BBANDS", "SMA", "EMA"]
-}
-}
+    "analysis": {
+      "interval": 1,
+      "main_timeframe": "1hour",
+      "timeframes": ["1hour", "1day"],
+      "indicators": [
+        "RSI", "MACD", "BBANDS", "SMA", "EMA", 
+        "OBV", "STOCH", "ADX", "FIBONACCI"
+      ]
+    },
+    "display": {
+      "theme": "dark",
+      "decimal_places": 2,
+      "show_all_indicators": true
+    },
+    "notifications": {
+      "enabled": false,
+      "email": "",
+      "strong_signals_only": true
+    }
+  }
+  ```
+  
 
 ```
 Response:
@@ -337,8 +364,7 @@ The KuCoin Spot Analysis Bot includes Telegram integration to send real-time not
 
 ```
 TELEGRAM_BOT_TOKEN=your_bot_token_here
-TELEGRAM_CHAT_ID=
-TELEGRAM_NOTIFICATIONS_ENABLED=true
+TELEGRAM_CHAT_ID=your_chat_id_here
 ```
 
 3. **Get Your Chat ID**:
