@@ -223,12 +223,14 @@ async def analyze_all_symbols_async():
                     # Wait for the task to complete
                     await asyncio.wrap_future(future)
                     logger.info(f"Completed analysis {i+1}/{len(symbols)}")
+                except KeyboardInterrupt:
+                    exit()
                 except Exception as e:
                     logger.error(f"Error in async analysis task: {str(e)}")
         
         logger.info("Async analysis cycle completed")
     except Exception as e:
-        logger.error(f"Error in async analysis cycle: {str(e)}")
+        logger.error(f"Error in async analysis task: {str(e)}")
 
 # Replace the existing analyze_all_symbols function with this one
 @logger_instance.performance_monitor("analyze_all_symbols")

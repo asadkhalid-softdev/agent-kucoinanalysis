@@ -179,7 +179,7 @@ class AnalysisEngine:
         summary_parts = []
         
         # Add price information
-        summary_parts.append(f"{symbol} is trading at {current_price:.2f} ({price_change:.2f}% change)")
+        summary_parts.append(f"{symbol} is trading at {current_price} ({price_change:.2f}% change)")
         
         # Add sentiment
         sentiment_str = f"{sentiment['strength']} {sentiment['overall']}" if sentiment['strength'] != 'none' else 'neutral'

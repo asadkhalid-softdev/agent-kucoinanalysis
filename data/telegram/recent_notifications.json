@@ -103,5 +103,33 @@
       "overall": "buy",
       "strength": "moderate"
     }
+  },
+  "REN-USDT": {
+    "timestamp": "2025-03-17T00:59:59.954045",
+    "sentiment": {
+      "overall": "buy",
+      "strength": "moderate"
+    }
+  },
+  "DFYN-USDT": {
+    "timestamp": "2025-03-17T01:00:21.054935",
+    "sentiment": {
+      "overall": "buy",
+      "strength": "moderate"
+    }
+  },
+  "EPIK-USDT": {
+    "timestamp": "2025-03-17T01:00:41.653286",
+    "sentiment": {
+      "overall": "buy",
+      "strength": "moderate"
+    }
+  },
+  "ERTHA-USDT": {
+    "timestamp": "2025-03-17T01:00:45.552419",
+    "sentiment": {
+      "overall": "buy",
+      "strength": "moderate"
+    }
   }
 }
