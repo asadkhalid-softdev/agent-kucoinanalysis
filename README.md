@@ -1,4 +1,4 @@
-# KuCoin Spot Analysis Bot
+# KuCoin Spot Analysis Bot (MEAN REVERSION PRINCIPAL)
 
 An AI-powered technical analysis bot for cryptocurrency markets using the KuCoin API. This bot analyzes popular technical indicators to provide trading insights without executing trades.
 

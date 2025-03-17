@@ -37,28 +37,30 @@ class AverageDirectionalIndex:
         current_adx = adx_df[adx_col].iloc[-1]
         current_pdi = adx_df[pdi_col].iloc[-1]
         current_ndi = adx_df[ndi_col].iloc[-1]
-        
-        # Determine trend strength
+
+        # Determine trend strength (keep this the same)
         if current_adx < 20:
             trend_strength = "weak"
         elif current_adx < 40:
             trend_strength = "moderate"
         else:
             trend_strength = "strong"
-        
-        # Determine signal
+
+        # Determine signal for mean reversion
         if current_adx > 25:
             if current_pdi > current_ndi:
-                signal = "bullish"
+                # Strong uptrend may be overextended - potential reversal down
+                signal = "bearish"  # Changed from bullish
                 strength = min(1.0, (current_pdi - current_ndi) / 10)
             elif current_ndi > current_pdi:
-                signal = "bearish"
+                # Strong downtrend may be overextended - potential reversal up
+                signal = "bullish"  # Changed from bearish
                 strength = min(1.0, (current_ndi - current_pdi) / 10)
             else:
                 signal = "neutral"
                 strength = 0.0
         else:
-            # ADX below 25 indicates weak trend
+            # ADX below 25 indicates weak trend - less likely to revert
             signal = "neutral"
             strength = 0.0
             

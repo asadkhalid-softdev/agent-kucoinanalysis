@@ -53,7 +53,7 @@ class BollingerBands:
             strength = min(1.0, (current_price / upper_band - 1) * 5)
         elif current_price < lower_band:
             signal = "bullish"
-            strength = min(1.0, (1 - current_price / lower_band) * 5)
+            strength = min(1.0, (lower_band / current_price - 1) * 5)  # Corrected formula
         else:
             # Inside the bands
             if percent_b > 0.8:

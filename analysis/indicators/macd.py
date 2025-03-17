@@ -48,21 +48,34 @@ class MACD:
         current_hist = macd_df[hist_col].iloc[0]
         prev_hist = macd_df[hist_col].iloc[1] if len(macd_df) > 1 else 0
 
-        # Determine signal
-        if current_macd > current_signal:
-            if current_hist > 0 and current_hist > prev_hist:
-                signal = "strongly_bullish"
-                strength = min(1.0, abs(current_hist) * 5)
+        # Calculate histogram extremes for normalization
+        hist_values = macd_df[hist_col].iloc[:20]  # Look at recent history
+        max_hist = max(abs(hist_values.max()), abs(hist_values.min()))
+        normalized_hist = current_hist / max_hist if max_hist > 0 else 0
+
+        # Determine signal based on mean reversion principles
+        if current_hist > 0:
+            # Positive histogram (MACD > Signal) might indicate overbought
+            if normalized_hist > 0.7:  # Significantly positive histogram
+                signal = "bearish"  # Expect reversion down
+                strength = min(1.0, normalized_hist)
+            elif current_hist < prev_hist:  # Histogram starting to decline
+                signal = "slightly_bearish"  # Early reversion signal
+                strength = min(1.0, normalized_hist * 0.7)
             else:
-                signal = "bullish"
-                strength = min(1.0, abs(current_macd - current_signal) * 5)
-        elif current_macd < current_signal:
-            if current_hist < 0 and current_hist < prev_hist:
-                signal = "strongly_bearish"
-                strength = min(1.0, abs(current_hist) * 5)
+                signal = "neutral"
+                strength = 0.0
+        elif current_hist < 0:
+            # Negative histogram (MACD < Signal) might indicate oversold
+            if normalized_hist < -0.7:  # Significantly negative histogram
+                signal = "bullish"  # Expect reversion up
+                strength = min(1.0, abs(normalized_hist))
+            elif current_hist > prev_hist:  # Histogram starting to increase
+                signal = "slightly_bullish"  # Early reversion signal
+                strength = min(1.0, abs(normalized_hist) * 0.7)
             else:
-                signal = "bearish"
-                strength = min(1.0, abs(current_macd - current_signal) * 5)
+                signal = "neutral"
+                strength = 0.0
         else:
             signal = "neutral"
             strength = 0.0

@@ -31,17 +31,32 @@ class SimpleMovingAverage:
         sma = self.calculate(df)
         current_price = df['close'].iloc[-1]
         current_sma = sma.iloc[-1]
-        
+
+        # Calculate percent deviation from SMA
+        deviation = (current_price / current_sma - 1)
+        abs_deviation = abs(deviation)
+
+        # For mean reversion: 
+        # - When price is above SMA, expect it to fall back (bearish)
+        # - When price is below SMA, expect it to rise back (bullish)
         if current_price > current_sma:
-            signal = "bullish"
-            strength = min(1.0, (current_price / current_sma - 1) * 10)
-        elif current_price < current_sma:
+            # Price above SMA - expect reversion down
             signal = "bearish"
-            strength = min(1.0, (1 - current_price / current_sma) * 10)
+            # Stronger signal when price is further above SMA
+            strength = min(1.0, abs_deviation * 10)
+        elif current_price < current_sma:
+            # Price below SMA - expect reversion up
+            signal = "bullish"
+            # Stronger signal when price is further below SMA
+            strength = min(1.0, abs_deviation * 10)
         else:
             signal = "neutral"
             strength = 0.0
-            
+
+        # Add a filter for extreme deviations
+        if abs_deviation > 0.15:  # 15% deviation might be too extreme for reliable mean reversion
+            strength = strength * 0.5  # Reduce confidence in very extreme cases
+
         return {
             "indicator": self.name,
             "value": current_sma,
