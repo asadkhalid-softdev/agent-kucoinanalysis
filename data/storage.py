@@ -301,6 +301,10 @@ class SymbolStorage:
                 self.logger.warning("No symbols fetched from KuCoin, keeping existing symbols")
                 return False
             
+            # symbols = [
+            #     "ADA-USDT"
+            # ]
+            
             # Save the symbols
             self._save_symbols(symbols)
             self.logger.info(f"Initialized {len(symbols)} symbols from KuCoin")

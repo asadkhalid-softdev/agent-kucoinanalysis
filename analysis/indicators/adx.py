@@ -3,8 +3,9 @@ import pandas_ta as ta
 import numpy as np
 
 class AverageDirectionalIndex:
-    def __init__(self, length=14):
+    def __init__(self, length=14, adx_threshold=25):
         self.length = length
+        self.adx_threshold = adx_threshold
         self.name = f"ADX_{length}"
     
     def calculate(self, df):
@@ -19,7 +20,7 @@ class AverageDirectionalIndex:
         return ta.adx(df['high'], df['low'], df['close'], length=self.length)
     
     def get_signal(self, df):
-        """Generate trading signal based on ADX
+        """Generate trading signal based on ADX for trend following
         
         Args:
             df (pd.DataFrame): DataFrame with OHLC price data
@@ -38,7 +39,7 @@ class AverageDirectionalIndex:
         current_pdi = adx_df[pdi_col].iloc[-1]
         current_ndi = adx_df[ndi_col].iloc[-1]
 
-        # Determine trend strength (keep this the same)
+        # Determine trend strength
         if current_adx < 20:
             trend_strength = "weak"
         elif current_adx < 40:
@@ -46,21 +47,22 @@ class AverageDirectionalIndex:
         else:
             trend_strength = "strong"
 
-        # Determine signal for mean reversion
-        if current_adx > 25:
+        # Determine signal for trend following
+        if current_adx > self.adx_threshold:
             if current_pdi > current_ndi:
-                # Strong uptrend may be overextended - potential reversal down
-                signal = "bearish"  # Changed from bullish
-                strength = min(1.0, (current_pdi - current_ndi) / 10)
+                # Strong uptrend - follow the trend up
+                signal = "bullish"
+                # Strength increases with both ADX and the difference between +DI and -DI
+                strength = min(1.0, (current_adx / 100) * (current_pdi - current_ndi) / 20)
             elif current_ndi > current_pdi:
-                # Strong downtrend may be overextended - potential reversal up
-                signal = "bullish"  # Changed from bearish
-                strength = min(1.0, (current_ndi - current_pdi) / 10)
+                # Strong downtrend - follow the trend down
+                signal = "bearish"
+                strength = min(1.0, (current_adx / 100) * (current_ndi - current_pdi) / 20)
             else:
                 signal = "neutral"
                 strength = 0.0
         else:
-            # ADX below 25 indicates weak trend - less likely to revert
+            # ADX below threshold indicates weak trend - not ideal for trend following
             signal = "neutral"
             strength = 0.0
             

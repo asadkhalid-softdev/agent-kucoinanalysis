@@ -14,13 +14,19 @@ class FibonacciRetracement:
             df (pd.DataFrame): DataFrame with OHLC price data
             
         Returns:
-            dict: Fibonacci retracement levels
+            dict: Fibonacci retracement levels and trend direction
         """
         # Use the specified period to find swing high and low
         period_data = df.iloc[-self.period:]
         
         high = period_data['high'].max()
+        high_idx = period_data['high'].idxmax()
+        
         low = period_data['low'].min()
+        low_idx = period_data['low'].idxmin()
+        
+        # Determine if we're in an uptrend or downtrend based on sequence of high and low
+        trend = "uptrend" if high_idx > low_idx else "downtrend"
         
         # Calculate retracement levels
         diff = high - low
@@ -32,14 +38,22 @@ class FibonacciRetracement:
             else:
                 levels[level] = high
         
+        # Get recent price movement
+        if len(df) >= 20:
+            recent_trend = "up" if df['close'].iloc[-1] > df['close'].iloc[-20] else "down"
+        else:
+            recent_trend = "neutral"
+        
         return {
             "high": high,
             "low": low,
-            "levels": levels
+            "levels": levels,
+            "trend": trend,
+            "recent_trend": recent_trend
         }
     
     def get_signal(self, df):
-        """Generate trading signal based on Fibonacci Retracement
+        """Generate trading signal based on Fibonacci Retracement for trend following
         
         Args:
             df (pd.DataFrame): DataFrame with OHLC price data
@@ -49,6 +63,10 @@ class FibonacciRetracement:
         """
         fib_levels = self.calculate(df)
         current_price = df['close'].iloc[-1]
+        previous_price = df['close'].iloc[-2] if len(df) > 1 else current_price
+        
+        # Determine short-term price movement
+        price_direction = "up" if current_price > previous_price else "down"
         
         # Find the closest levels
         levels = fib_levels["levels"]
@@ -87,82 +105,83 @@ class FibonacciRetracement:
             distance_pct = (above_level[1] - current_price) / current_price
         
         # Find next level above for potential profit target
-        next_level_above = None
-        potential_profit_pct = None
-        
-        if above_level:
-            next_level_above = above_level
-            potential_profit_pct = (next_level_above[1] - current_price) / current_price * 100
-        
-        # Find next significant level above (if current level is not the highest)
-        if above_level and sorted_levels[-1] != above_level:
-            # Find the index of the above_level in sorted_levels
-            for i, (level, price) in enumerate(sorted_levels):
-                if level == above_level[0] and price == above_level[1]:
-                    # If there's a next level, use it as the target
-                    if i + 1 < len(sorted_levels):
-                        next_level_above = sorted_levels[i + 1]
-                        potential_profit_pct = (next_level_above[1] - current_price) / current_price * 100
-                    break
+        next_level_above = above_level
+        potential_profit_pct = (next_level_above[1] - current_price) / current_price * 100 if next_level_above else None
         
         # Find next level below for potential stop loss
-        next_level_below = None
-        potential_loss_pct = None
-        
-        if below_level:
-            next_level_below = below_level
-            potential_loss_pct = (current_price - next_level_below[1]) / current_price * 100
-        
-        # Find next significant level below (if current level is not the lowest)
-        if below_level and sorted_levels[0] != below_level:
-            # Find the index of the below_level in sorted_levels
-            for i, (level, price) in enumerate(sorted_levels):
-                if level == below_level[0] and price == below_level[1]:
-                    # If there's a previous level, use it as the stop loss
-                    if i > 0:
-                        next_level_below = sorted_levels[i - 1]
-                        potential_loss_pct = (current_price - next_level_below[1]) / current_price * 100
-                    break
+        next_level_below = below_level
+        potential_loss_pct = (current_price - next_level_below[1]) / current_price * 100 if next_level_below else None
         
         # Calculate risk/reward ratio
         risk_reward_ratio = None
         if potential_profit_pct is not None and potential_loss_pct is not None and potential_loss_pct > 0:
             risk_reward_ratio = potential_profit_pct / potential_loss_pct
         
-        # Determine signal
+        # Determine signal for trend following
         signal = "neutral"
         strength = 0.0
         
-        if closest_level and distance_pct is not None and distance_pct < 0.01:  # Within 1% of a level
-            level_value = closest_level[0]
-            
-            # Price near support
-            if closest_level == below_level:
-                if level_value <= 0.382:  # Strong support levels
+        # Trend following logic
+        trend = fib_levels["trend"]
+        recent_trend = fib_levels["recent_trend"]
+        
+        if trend == "uptrend" and recent_trend == "up":
+            # In an uptrend, look for bounces off support levels as buying opportunities
+            if closest_level == below_level and distance_pct < 0.02:  # Within 2% of a support level
+                level_value = closest_level[0]
+                if level_value <= 0.5:  # Key retracement levels in uptrend
                     signal = "bullish"
-                    strength = 0.5 + (0.5 * (1 - level_value))  # Higher strength for lower levels
+                    # Higher strength for stronger support levels and when price is moving up
+                    strength = 0.5 + (0.5 * (1 - level_value)) * (1 if price_direction == "up" else 0.5)
                 else:
                     signal = "slightly_bullish"
-                    strength = 0.3
-            
-            # Price near resistance
-            elif closest_level == above_level:
-                if level_value >= 0.618:  # Strong resistance levels
+                    strength = 0.3 * (1 if price_direction == "up" else 0.5)
+        
+        elif trend == "downtrend" and recent_trend == "down":
+            # In a downtrend, look for rejections at resistance levels as selling opportunities
+            if closest_level == above_level and distance_pct < 0.02:  # Within 2% of a resistance level
+                level_value = closest_level[0]
+                if level_value >= 0.5:  # Key retracement levels in downtrend
                     signal = "bearish"
-                    strength = 0.5 + (0.5 * level_value)  # Higher strength for higher levels
+                    # Higher strength for stronger resistance levels and when price is moving down
+                    strength = 0.5 + (0.5 * level_value) * (1 if price_direction == "down" else 0.5)
                 else:
                     signal = "slightly_bearish"
-                    strength = 0.3
+                    strength = 0.3 * (1 if price_direction == "down" else 0.5)
+        
+        # Breakout scenarios - following the trend on breakouts
+        elif trend == "uptrend" and current_price > fib_levels["high"]:
+            # Breakout above the high in an uptrend
+            signal = "bullish"
+            strength = 0.8
+        
+        elif trend == "downtrend" and current_price < fib_levels["low"]:
+            # Breakout below the low in a downtrend
+            signal = "bearish"
+            strength = 0.8
+        
+        # Trend reversal confirmation
+        elif trend == "downtrend" and recent_trend == "up" and current_price > sorted_levels[len(sorted_levels)//2][1]:
+            # Price moved above the middle of the range in a previous downtrend
+            signal = "bullish"
+            strength = 0.4
+        
+        elif trend == "uptrend" and recent_trend == "down" and current_price < sorted_levels[len(sorted_levels)//2][1]:
+            # Price moved below the middle of the range in a previous uptrend
+            signal = "bearish"
+            strength = 0.4
         
         return {
             "indicator": self.name,
             "value": {
                 "levels": fib_levels["levels"],
+                "trend": fib_levels["trend"],
+                "recent_trend": fib_levels["recent_trend"],
                 "closest_level": closest_level[0] if closest_level else None,
                 "closest_price": closest_level[1] if closest_level else None,
                 "distance_pct": distance_pct,
                 "next_level_above": next_level_above[0] if next_level_above else None,
-                "next_level_above_price": next_level_above[1] if next_level_above else None,  # Fixed field name
+                "next_level_above_price": next_level_above[1] if next_level_above else None,
                 "potential_profit_pct": potential_profit_pct,
                 "next_level_below": next_level_below[0] if next_level_below else None,
                 "next_level_below_price": next_level_below[1] if next_level_below else None,

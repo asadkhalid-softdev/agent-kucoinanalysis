@@ -23,7 +23,7 @@ class BollingerBands:
         return bbands
     
     def get_signal(self, df):
-        """Generate trading signal based on Bollinger Bands
+        """Generate trading signal based on Bollinger Bands for trend following
         
         Args:
             df (pd.DataFrame): DataFrame with 'close' price column
@@ -38,7 +38,10 @@ class BollingerBands:
         middle_col = f"BBM_{self.window}_{float(self.window_dev)}"
         lower_col = f"BBL_{self.window}_{float(self.window_dev)}"
 
+        # Get current and previous values
         current_price = df['close'].iloc[-1]
+        previous_price = df['close'].iloc[-2] if len(df) > 1 else current_price
+        
         upper_band = bbands[upper_col].iloc[-1]
         middle_band = bbands[middle_col].iloc[-1]
         lower_band = bbands[lower_col].iloc[-1]
@@ -47,21 +50,46 @@ class BollingerBands:
         bandwidth = (upper_band - lower_band) / middle_band
         percent_b = (current_price - lower_band) / (upper_band - lower_band) if upper_band != lower_band else 0.5
         
-        # Determine signal
-        if current_price > upper_band:
-            signal = "bearish"
-            strength = min(1.0, (current_price / upper_band - 1) * 5)
-        elif current_price < lower_band:
-            signal = "bullish"
-            strength = min(1.0, (lower_band / current_price - 1) * 5)  # Corrected formula
+        # Get price direction
+        price_direction = "up" if current_price > previous_price else "down"
+        
+        # Calculate slope of middle band (trend direction)
+        if len(bbands) > 5:
+            middle_slope = bbands[middle_col].iloc[-1] - bbands[middle_col].iloc[-5]
+            trend_direction = "up" if middle_slope > 0 else "down"
         else:
-            # Inside the bands
-            if percent_b > 0.8:
-                signal = "slightly_bearish"
-                strength = (percent_b - 0.8) * 5
-            elif percent_b < 0.2:
+            trend_direction = "neutral"
+        
+        # Determine signal for trend following
+        if trend_direction == "up":
+            if current_price > middle_band and bandwidth > 0.05:  # Expanding bands in uptrend
+                signal = "bullish"
+                strength = min(1.0, percent_b * bandwidth * 5)
+            elif current_price < middle_band:
+                signal = "neutral"
+                strength = 0.0
+            else:
                 signal = "slightly_bullish"
-                strength = (0.2 - percent_b) * 5
+                strength = min(0.5, percent_b * 0.5)
+        elif trend_direction == "down":
+            if current_price < middle_band and bandwidth > 0.05:  # Expanding bands in downtrend
+                signal = "bearish"
+                strength = min(1.0, (1 - percent_b) * bandwidth * 5)
+            elif current_price > middle_band:
+                signal = "neutral"
+                strength = 0.0
+            else:
+                signal = "slightly_bearish"
+                strength = min(0.5, (1 - percent_b) * 0.5)
+        else:
+            # No clear trend
+            if bandwidth < 0.03:  # Very narrow bands suggest potential breakout
+                if price_direction == "up":
+                    signal = "slightly_bullish"
+                    strength = 0.3
+                else:
+                    signal = "slightly_bearish"
+                    strength = 0.3
             else:
                 signal = "neutral"
                 strength = 0.0
@@ -73,7 +101,8 @@ class BollingerBands:
                 "middle": middle_band,
                 "lower": lower_band,
                 "bandwidth": bandwidth,
-                "percent_b": percent_b
+                "percent_b": percent_b,
+                "trend_direction": trend_direction
             },
             "signal": signal,
             "strength": strength
