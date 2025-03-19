@@ -186,13 +186,14 @@ class TelegramNotifier:
             overall = sentiment.get("overall", "neutral")
             strength = sentiment.get("strength", "none")
             confidence = sentiment.get("confidence", 0.0)
+            score = sentiment.get("score", 0.0)
             volume = analysis.get("volume", 0.0)
             price = analysis.get("price", 0.0)
             
             message = f"<b>🚨 {symbol} Alert: {strength.upper()} {overall.upper()}</b>\n\n"
             message += f"💰 Current Price: ${str(price)}\n"
             message += f"🎯 Sentiment: {strength} {overall}\n"
-            message += f"🔍 Confidence: {confidence:.2f}\n"
+            message += f"🔍 Confidence: {confidence:.2f} ({score:.2f})\n"
             message += f"📊 Volume: {volume}\n\n"
             
             # Add summary if available
