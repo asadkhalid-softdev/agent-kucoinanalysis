@@ -4,16 +4,16 @@
       "main_timeframe": "1hour",
       "timeframes": ["1hour"],
       "indicators": [
-        "RSI", "MACD", "BBANDS"
+        "RSI", "MACD", "BBANDS", "OBV"
       ]
     },
     "telegram": {
       "telegram_notifications_enabled": true,
       "telegram_notify_on_sentiment": ["weak sell"],
-      "telegram_notify_on_confidence": 0.75,
+      "telegram_notify_on_confidence": 0.5,
       "telegram_notify_on_volume": 10000,
       "telegram_notify_on_plr": 0,
-      "telegram_notify_on_rsi_buy": 30
+      "telegram_notify_on_rsi_buy": 100
     },
     "display": {
       "theme": "dark",
