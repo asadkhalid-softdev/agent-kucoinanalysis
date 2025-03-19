@@ -77,7 +77,7 @@ def analyze_symbol(symbol):
                 min_candles = 60  # About 6 months of 3-day data
             elif timeframe == "1day":
                 # Get 1 year of daily data (365 candles)
-                start_time = int(time.time() - (86400 * 365))
+                start_time = int(time.time() - (86400 * 100))
                 min_candles = 100  # About 3-4 months of daily data
             elif timeframe == "12hour":
                 # Get 180 days of 12h data (360 candles)

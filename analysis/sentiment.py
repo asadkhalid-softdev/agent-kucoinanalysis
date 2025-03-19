@@ -20,7 +20,7 @@ class SentimentAnalyzer:
     # Indicator importance weights (can be adjusted)
     INDICATOR_WEIGHTS = {
         "RSI": 1.2,       # Increased - highly reliable on 1H charts
-        "MACD": 1.5,      # Increased - excellent trend and momentum indicator for 1H
+        "MACD": 1.3,      # Increased - excellent trend and momentum indicator for 1H
         "BBANDS": 1.0,    # Increased - volatility and price extremes are meaningful on 1H
         "SMA": 0.9,       # Increased - trend identification is important
         "EMA": 1.1,       # Increased - responsive trend signals work well on 1H
@@ -95,7 +95,7 @@ class SentimentAnalyzer:
         if weighted_score > 0.5:
             overall = "buy"
             strength = "strong"
-        elif weighted_score > 0.2:
+        elif weighted_score > 0.35:
             overall = "buy"
             strength = "moderate"
         elif weighted_score > 0.05:
