@@ -66,7 +66,7 @@ class SystemMetrics:
                 self.collect_current_metrics()
                 time.sleep(interval)
             except Exception as e:
-                logger.error(f"Error collecting metrics: {str(e)}")
+                logger.error(f"Error collecting metrics: {str(e)}", exc_info=True)
     
     def collect_current_metrics(self):
         """Collect current system metrics"""
@@ -112,7 +112,7 @@ class SystemMetrics:
                     self.metrics_history = self.metrics_history[-self.history_size:]
         
         except Exception as e:
-            logger.error(f"Error collecting metrics: {str(e)}")
+            logger.error(f"Error collecting metrics: {str(e)}", exc_info=True)
     
     def get_metrics_history(self):
         """
@@ -190,7 +190,7 @@ class PerformanceMetrics:
             return df
         
         except Exception as e:
-            logger.error(f"Error getting performance metrics: {str(e)}")
+            logger.error(f"Error getting performance metrics: {str(e)}", exc_info=True)
             return pd.DataFrame()
     
     def get_operation_stats(self, df=None, hours=24):

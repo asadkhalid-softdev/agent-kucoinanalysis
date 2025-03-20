@@ -11,11 +11,11 @@ def main():
     settings = Settings()
     
     if not settings.telegram_bot_token:
-        logger.error("No Telegram bot token found in settings")
+        logger.error("No Telegram bot token found in settings", exc_info=True)
         return
         
     if not settings.telegram_chat_id:
-        logger.error("No Telegram chat ID found in settings")
+        logger.error("No Telegram chat ID found in settings", exc_info=True)
         logger.info("Run utils/get_telegram_chat_id.py to get your chat ID")
         return
     
@@ -59,7 +59,7 @@ def main():
     if success:
         logger.info("Test notification sent successfully")
     else:
-        logger.error("Failed to send test notification")
+        logger.error("Failed to send test notification", exc_info=True)
 
 if __name__ == "__main__":
     main()

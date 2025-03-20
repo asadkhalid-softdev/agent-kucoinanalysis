@@ -23,7 +23,7 @@ def main():
     
     # Check if KuCoin credentials are available
     if not all([settings.kucoin_api_key, settings.kucoin_api_secret, settings.kucoin_api_passphrase]):
-        logger.error("KuCoin API credentials not found. Cannot proceed with optimization.")
+        logger.error("KuCoin API credentials not found. Cannot proceed with optimization.", exc_info=True)
         return
     
     # Initialize KuCoin client
