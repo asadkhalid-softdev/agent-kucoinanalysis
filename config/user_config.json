@@ -1,8 +1,8 @@
 {
   "analysis": {
     "interval": 1,
-    "main_timeframe": "15min",
-    "timeframes": ["15min"],
+    "main_timeframe": "1day",
+    "timeframes": ["1day"],
     "indicators": [
       "RSI", "MACD", "BBANDS", "SMA", "EMA", 
       "OBV", "STOCH", "ADX", "FIBONACCI"
@@ -15,7 +15,7 @@
     "telegram_notify_on_volume": 10000,
     "telegram_notify_on_plr": 1,
     "telegram_notify_on_rsi_buy": 70,
-    "telegram_notify_on_profit_buy": 2
+    "telegram_notify_on_profit_buy": 10
   },
   "display": {
     "theme": "dark",

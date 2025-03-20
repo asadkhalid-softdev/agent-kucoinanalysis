@@ -313,7 +313,7 @@ class SymbolStorage:
                 return False
             
             # symbols = [
-            #     "ARX-USDT"
+            #     "LITH-USDT"
             # ]
             
             # Save the symbols
