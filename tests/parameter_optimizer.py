@@ -340,10 +340,10 @@ class ParameterOptimizer:
             if "data" in klines:
                 return klines["data"]
             else:
-                self.logger.error(f"Failed to get klines data: {klines}")
+                self.logger.error(f"Failed to get klines data: {klines}", exc_info=True)
                 return []
         except Exception as e:
-            self.logger.error(f"Error getting historical data: {str(e)}")
+            self.logger.error(f"Error getting historical data: {str(e)}", exc_info=True)
             return []
     
     def save_results(self, results: Dict[str, Any], filename: str) -> None:
@@ -359,4 +359,4 @@ class ParameterOptimizer:
                 json.dump(results, f, indent=2)
             self.logger.info(f"Results saved to {filename}")
         except Exception as e:
-            self.logger.error(f"Error saving results: {str(e)}")
+            self.logger.error(f"Error saving results: {str(e)}", exc_info=True)

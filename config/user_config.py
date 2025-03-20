@@ -48,7 +48,7 @@ class UserConfig:
             with open(self.config_file, 'r') as f:
                 return json.load(f)
         except (FileNotFoundError, json.JSONDecodeError) as e:
-            self.logger.error(f"Error reading configuration file: {str(e)}")
+            self.logger.error(f"Error reading configuration file: {str(e)}", exc_info=True)
             # Return default config if there's an error
             return self._get_default_config()
     
@@ -73,7 +73,7 @@ class UserConfig:
             self._save_config(updated_config)
             return True
         except Exception as e:
-            self.logger.error(f"Error updating configuration: {str(e)}")
+            self.logger.error(f"Error updating configuration: {str(e)}", exc_info=True)
             return False
     
     def get_value(self, key_path: str, default: Any = None) -> Any:
@@ -128,7 +128,7 @@ class UserConfig:
             self._save_config(config)
             return True
         except Exception as e:
-            self.logger.error(f"Error setting configuration value: {str(e)}")
+            self.logger.error(f"Error setting configuration value: {str(e)}", exc_info=True)
             return False
     
     def reset_to_defaults(self) -> bool:
@@ -142,7 +142,7 @@ class UserConfig:
             self._save_config(self._get_default_config())
             return True
         except Exception as e:
-            self.logger.error(f"Error resetting configuration: {str(e)}")
+            self.logger.error(f"Error resetting configuration: {str(e)}", exc_info=True)
             return False
     
     def _save_config(self, config: Dict[str, Any]) -> None:
@@ -156,7 +156,7 @@ class UserConfig:
             with open(self.config_file, 'w') as f:
                 json.dump(config, f, indent=2)
         except Exception as e:
-            self.logger.error(f"Error saving configuration file: {str(e)}")
+            self.logger.error(f"Error saving configuration file: {str(e)}", exc_info=True)
     
     def _deep_merge(self, d1: Dict[str, Any], d2: Dict[str, Any]) -> Dict[str, Any]:
         """

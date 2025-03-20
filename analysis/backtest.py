@@ -125,7 +125,7 @@ class Backtester:
             }
             
         except Exception as e:
-            self.logger.error(f"Error in backtest for {symbol}: {str(e)}")
+            self.logger.error(f"Error in backtest for {symbol}: {str(e)}", exc_info=True)
             return {
                 "symbol": symbol,
                 "error": str(e),

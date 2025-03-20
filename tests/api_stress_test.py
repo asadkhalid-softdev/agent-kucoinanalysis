@@ -50,10 +50,10 @@ class APIStressTester:
                         self.token = response_data.get("access_token")
                         return True
                     else:
-                        self.logger.error(f"Login failed: {response.status}")
+                        self.logger.error(f"Login failed: {response.status}", exc_info=True)
                         return False
         except Exception as e:
-            self.logger.error(f"Error during login: {str(e)}")
+            self.logger.error(f"Error during login: {str(e)}", exc_info=True)
             return False
     
     async def test_endpoint(
@@ -198,7 +198,7 @@ class APIStressTester:
             output_file (str, optional): Path to save the plot
         """
         if "error" in results:
-            self.logger.error("Cannot plot results: Invalid results data")
+            self.logger.error("Cannot plot results: Invalid results data", exc_info=True)
             return
         
         # Create figure with subplots

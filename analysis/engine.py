@@ -96,11 +96,11 @@ class AnalysisEngine:
                     indicator_results[indicator.name] = signal
                     indicator_signals.append(signal)
                 except Exception as e:
-                    self.logger.error(f"Error calculating {indicator.name} for {symbol}: {str(e)}")
+                    self.logger.error(f"Error calculating {indicator.name} for {symbol}: {str(e)}", exc_info=True)
             
             # Analyze sentiment
             sentiment = self.sentiment_analyzer.analyze(indicator_signals, df)
-            
+
             # Prepare analysis summary
             summary = self._generate_summary(symbol, df, indicator_results, sentiment)
             
@@ -115,7 +115,7 @@ class AnalysisEngine:
             }
             
         except Exception as e:
-            self.logger.error(f"Error analyzing {symbol}: {str(e)}")
+            self.logger.error(f"Error analyzing {symbol}: {str(e)}", exc_info=True)
             return {
                 "symbol": symbol,
                 "timestamp": datetime.now().isoformat(),
