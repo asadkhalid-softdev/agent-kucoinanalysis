@@ -5,7 +5,7 @@ import numpy as np
 class RSI:
     def __init__(self, window=14):
         self.window = window
-        self.name = f"RSI_{window}"
+        self.name = f"RSI"
         self.overbought = 70
         self.oversold = 30
 

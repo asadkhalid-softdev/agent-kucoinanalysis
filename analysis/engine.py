@@ -100,7 +100,7 @@ class AnalysisEngine:
             
             # Analyze sentiment
             sentiment = self.sentiment_analyzer.analyze(indicator_signals, df)
-
+            
             # Prepare analysis summary
             summary = self._generate_summary(symbol, df, indicator_results, sentiment)
             

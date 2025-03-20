@@ -3,11 +3,11 @@ import pandas_ta as ta
 import numpy as np
 
 class StochasticOscillator:
-    def init(self, k_period=14, d_period=3, smooth_k=3):
+    def __init__(self, k_period=14, d_period=3, smooth_k=3):
         self.k_period = k_period
         self.d_period = d_period
         self.smooth_k = smooth_k
-        self.name = f"STOCH_{k_period}{d_period}{smooth_k}"
+        self.name = f"STOCH"
         self.overbought = 80
         self.oversold = 20
 
@@ -38,17 +38,17 @@ class StochasticOscillator:
         k_col = f"STOCHk_{self.k_period}_{self.d_period}_{self.smooth_k}"
         d_col = f"STOCHd_{self.k_period}_{self.d_period}_{self.smooth_k}"
 
-        current_k = stoch[k_col].iloc[-1]
-        current_d = stoch[d_col].iloc[-1]
+        current_k = stoch[k_col].iloc[0]
+        current_d = stoch[d_col].iloc[0]
         
         # Get previous values for trend determination
-        prev_k = stoch[k_col].iloc[-2] if len(stoch) > 1 else current_k
-        prev_d = stoch[d_col].iloc[-2] if len(stoch) > 1 else current_d
+        prev_k = stoch[k_col].iloc[2] if len(stoch) > 1 else current_k
+        prev_d = stoch[d_col].iloc[2] if len(stoch) > 1 else current_d
         
         # Get more history for trend confirmation
         if len(stoch) >= 5:
-            k_5_periods_ago = stoch[k_col].iloc[-5]
-            d_5_periods_ago = stoch[d_col].iloc[-5]
+            k_5_periods_ago = stoch[k_col].iloc[5]
+            d_5_periods_ago = stoch[d_col].iloc[5]
             k_trend = "up" if current_k > k_5_periods_ago else "down"
             d_trend = "up" if current_d > d_5_periods_ago else "down"
         else:

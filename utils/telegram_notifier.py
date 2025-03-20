@@ -3,6 +3,17 @@ import logging
 from typing import Dict, Any, List, Optional
 import os, json
 from datetime import datetime, timedelta
+import numpy as np
+
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return super(NumpyEncoder, self).default(obj)
 
 class TelegramNotifier:
     """
@@ -65,7 +76,7 @@ class TelegramNotifier:
             
             notification_file = os.path.join(self.storage_dir, "recent_notifications.json")
             with open(notification_file, 'w') as f:
-                json.dump(serializable_notifications, f, indent=2)
+                json.dump(serializable_notifications, f, indent=2, cls=NumpyEncoder)
         except Exception as e:
             self.logger.error(f"Error saving recent notifications: {str(e)}", exc_info=True)
     

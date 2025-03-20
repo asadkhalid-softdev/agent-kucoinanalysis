@@ -1,29 +1,30 @@
 {
-    "analysis": {
-      "interval": 1,
-      "main_timeframe": "1day",
-      "timeframes": ["1day"],
-      "indicators": [
-        "RSI", "MACD", "BBANDS", "OBV"
-      ]
-    },
-    "telegram": {
-      "telegram_notifications_enabled": true,
-      "telegram_notify_on_sentiment": ["moderate buy"],
-      "telegram_notify_on_confidence": 0.75,
-      "telegram_notify_on_volume": 10000,
-      "telegram_notify_on_plr": 0,
-      "telegram_notify_on_rsi_buy": 100
-    },
-    "display": {
-      "theme": "dark",
-      "decimal_places": 2,
-      "show_all_indicators": true
-    },
-    "notifications": {
-      "enabled": false,
-      "email": "",
-      "strong_signals_only": true
-    }
+  "analysis": {
+    "interval": 1,
+    "main_timeframe": "15min",
+    "timeframes": ["15min"],
+    "indicators": [
+      "RSI", "MACD", "BBANDS", "SMA", "EMA", 
+      "OBV", "STOCH", "ADX", "FIBONACCI"
+    ]
+  },
+  "telegram": {
+    "telegram_notifications_enabled": true,
+    "telegram_notify_on_sentiment": ["weak buy"],
+    "telegram_notify_on_confidence": 0.5,
+    "telegram_notify_on_volume": 10000,
+    "telegram_notify_on_plr": 1,
+    "telegram_notify_on_rsi_buy": 70,
+    "telegram_notify_on_profit_buy": 2
+  },
+  "display": {
+    "theme": "dark",
+    "decimal_places": 2,
+    "show_all_indicators": true
+  },
+  "notifications": {
+    "enabled": false,
+    "email": "",
+    "strong_signals_only": true
   }
-  
+}

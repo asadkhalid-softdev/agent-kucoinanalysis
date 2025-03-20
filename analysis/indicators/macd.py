@@ -7,7 +7,7 @@ class MACD:
         self.fast = fast
         self.slow = slow
         self.signal_length = signal
-        self.name = f"MACD_{fast}{slow}{signal}"
+        self.name = f"MACD"
 
 
     def calculate(self, df):

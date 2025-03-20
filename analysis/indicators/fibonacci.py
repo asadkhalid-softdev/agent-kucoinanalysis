@@ -4,7 +4,7 @@ import numpy as np
 class FibonacciRetracement:
     def __init__(self, period=100):
         self.period = period
-        self.name = f"FIBONACCI_{period}"
+        self.name = f"FIBONACCI"
         self.levels = [0.0, 0.236, 0.382, 0.5, 0.618, 0.786, 1.0, 1.272, 1.618, 2.0, 2.618, 4.236]
     
     def calculate(self, df):

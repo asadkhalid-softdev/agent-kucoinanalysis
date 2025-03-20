@@ -85,34 +85,31 @@ class SentimentAnalyzer:
             type_scores.append((avg_signal, weight))
             total_weight += weight
         
-        # Calculate weighted average sentiment score
-        if total_weight > 0:
-            weighted_score = sum(score * weight for score, weight in type_scores) / total_weight
-        else:
-            weighted_score = 0.0
-        
-        # Determine overall sentiment and strength
-        if weighted_score > 0.5:
-            overall = "buy"
-            strength = "strong"
-        elif weighted_score > 0.35:
-            overall = "buy"
-            strength = "moderate"
-        elif weighted_score > 0.05:
-            overall = "buy"
-            strength = "weak"
-        elif weighted_score < -0.5:
-            overall = "sell"
-            strength = "strong"
-        elif weighted_score < -0.2:
-            overall = "sell"
-            strength = "moderate"
-        elif weighted_score < -0.05:
-            overall = "sell"
-            strength = "weak"
-        else:
-            overall = "neutral"
-            strength = "none"
+            # Calculate weighted average sentiment score
+            weighted_score = sum(score * weight for score, weight in type_scores) / total_weight if total_weight > 0 else 0.0
+
+            # Determine overall sentiment and strength
+            if weighted_score >= 0.5:
+                overall = "buy"
+                strength = "strong"
+            elif weighted_score >= 0.3:
+                overall = "buy"
+                strength = "moderate"
+            elif weighted_score >= 0.05:
+                overall = "buy"
+                strength = "weak"
+            elif weighted_score <= -0.5:
+                overall = "sell"
+                strength = "strong"
+            elif weighted_score <= -0.3:
+                overall = "sell"
+                strength = "moderate"
+            elif weighted_score <= -0.05:
+                overall = "sell"
+                strength = "weak"
+            else:
+                overall = "neutral"
+                strength = "none"
         
         # Calculate confidence based on agreement among indicators
         signal_values = [self._normalize_signal(s["signal"]) for s in indicator_signals]

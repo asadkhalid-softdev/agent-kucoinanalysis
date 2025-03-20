@@ -6,7 +6,7 @@ class AverageDirectionalIndex:
     def __init__(self, length=14, adx_threshold=25):
         self.length = length
         self.adx_threshold = adx_threshold
-        self.name = f"ADX_{length}"
+        self.name = f"ADX"
     
     def calculate(self, df):
         """Calculate Average Directional Index

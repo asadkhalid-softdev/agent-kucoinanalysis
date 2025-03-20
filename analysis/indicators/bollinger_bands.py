@@ -6,7 +6,7 @@ class BollingerBands:
     def __init__(self, window=20, window_dev=2):
         self.window = window
         self.window_dev = window_dev
-        self.name = f"BBANDS_{window}_{window_dev}"
+        self.name = f"BBANDS"
     
     def calculate(self, df):
         """Calculate Bollinger Bands
