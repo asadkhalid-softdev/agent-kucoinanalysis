@@ -1,8 +1,8 @@
 {
     "analysis": {
       "interval": 1,
-      "main_timeframe": "1hour",
-      "timeframes": ["1hour"],
+      "main_timeframe": "1day",
+      "timeframes": ["1day"],
       "indicators": [
         "RSI", "MACD", "BBANDS", "OBV"
       ]
@@ -10,7 +10,7 @@
     "telegram": {
       "telegram_notifications_enabled": true,
       "telegram_notify_on_sentiment": ["moderate buy"],
-      "telegram_notify_on_confidence": 0.5,
+      "telegram_notify_on_confidence": 0.75,
       "telegram_notify_on_volume": 10000,
       "telegram_notify_on_plr": 0,
       "telegram_notify_on_rsi_buy": 100
