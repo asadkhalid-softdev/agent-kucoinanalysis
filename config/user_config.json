@@ -1,19 +1,20 @@
 {
     "analysis": {
       "interval": 1,
-      "main_timeframe": "1hour",
-      "timeframes": ["1hour"],
+      "main_timeframe": "15min",
+      "timeframes": ["15min"],
       "indicators": [
-        "RSI", "MACD", "BBANDS"
+        "RSI", "MACD", "BBANDS", "SMA", "EMA", 
+        "OBV", "STOCH", "ADX", "FIBONACCI"
       ]
     },
     "telegram": {
       "telegram_notifications_enabled": true,
-      "telegram_notify_on_sentiment": ["strong buy", "moderate buy"],
-      "telegram_notify_on_confidence": 0.75,
+      "telegram_notify_on_sentiment": ["moderate buy"],
+      "telegram_notify_on_confidence": 0,
       "telegram_notify_on_volume": 10000,
       "telegram_notify_on_plr": 0,
-      "telegram_notify_on_rsi_buy": 30
+      "telegram_notify_on_rsi_buy": 100
     },
     "display": {
       "theme": "dark",
