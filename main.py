@@ -153,7 +153,7 @@ def analyze_symbol(symbol):
                     time.sleep(1)  # Avoid rate limiting
                     
                 except Exception as e:
-                    logger.error(f"Exception getting {timeframe} data for {symbol}: {str(e)}")
+                    logger.error(f"Exception getting {timeframe} data for {symbol}: {str(e)}", exc_info=True)
                     retry_count += 1
                     time.sleep(2)  # Longer delay on exception
         
@@ -189,7 +189,7 @@ def analyze_symbol(symbol):
             ticker = kucoin_client.get_ticker(symbol)
             current_price = float(ticker.get("data", {}).get("price", 0))
         except Exception as e:
-            logger.error(f"Error getting current price for {symbol}: {str(e)}")
+            logger.error(f"Error getting current price for {symbol}: {str(e)}", exc_info=True)
             current_price = 0
             
         # Analyze symbol using available data for primary timeframe
@@ -205,7 +205,7 @@ def analyze_symbol(symbol):
                 multi_tf_analysis = analysis_engine.multi_timeframe_analysis(symbol, timeframe_data)
                 analysis["multi_timeframe"] = multi_tf_analysis
             except Exception as e:
-                logger.error(f"Error in multi-timeframe analysis for {symbol}: {str(e)}")
+                logger.error(f"Error in multi-timeframe analysis for {symbol}: {str(e)}", exc_info=True)
         
         # Store analysis result
         symbol_storage.store_analysis(symbol, analysis)
@@ -242,7 +242,7 @@ def analyze_symbol(symbol):
                 telegram_notifier.send_analysis_alert(symbol, analysis)
         
     except Exception as e:
-        logger.error(f"Error analyzing {symbol}: {str(e)}")
+        logger.error(f"Error analyzing {symbol}: {str(e)}", exc_info=True)
         # Store error analysis
         symbol_storage.store_analysis(symbol, {
             "symbol": symbol,
@@ -280,11 +280,11 @@ async def analyze_all_symbols_async():
                 except KeyboardInterrupt:
                     exit()
                 except Exception as e:
-                    logger.error(f"Error in async analysis task: {str(e)}")
+                    logger.error(f"Error in async analysis task: {str(e)}", exc_info=True)
         
         logger.info("Async analysis cycle completed")
     except Exception as e:
-        logger.error(f"Error in async analysis task: {str(e)}")
+        logger.error(f"Error in async analysis task: {str(e)}", exc_info=True)
 
 # Replace the existing analyze_all_symbols function with this one
 @logger_instance.performance_monitor("analyze_all_symbols")
@@ -337,7 +337,7 @@ def run_initial_analysis():
     try:
         analyze_all_symbols()
     except Exception as e:
-        logger.error(f"Error in initial analysis: {str(e)}")
+        logger.error(f"Error in initial analysis: {str(e)}", exc_info=True)
 
 if __name__ == "__main__":
     try:
@@ -355,7 +355,7 @@ if __name__ == "__main__":
         logger.info("Starting API server")
         uvicorn.run(app, host="0.0.0.0", port=8000)
     except Exception as e:
-        logger.error(f"Error starting application: {str(e)}")
+        logger.error(f"Error starting application: {str(e)}", exc_info=True)
     except KeyboardInterrupt:
         logger.info("Shutting down application")
     finally:

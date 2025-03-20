@@ -11,7 +11,7 @@ def main():
     settings = Settings()
     
     if not settings.telegram_bot_token:
-        logger.error("No Telegram bot token found in settings")
+        logger.error("No Telegram bot token found in settings", exc_info=True)
         return
     
     notifier = TelegramNotifier(settings.telegram_bot_token)
@@ -30,7 +30,7 @@ def main():
                              "You will receive notifications here when strong buy/sell signals are detected.", 
                              chat_id)
     else:
-        logger.error("No chat ID found. Please send a message to your bot and try again.")
+        logger.error("No chat ID found. Please send a message to your bot and try again.", exc_info=True)
 
 if __name__ == "__main__":
     main()
