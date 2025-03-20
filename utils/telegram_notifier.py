@@ -50,7 +50,7 @@ class TelegramNotifier:
                 self.recent_notifications = stored_notifications
                 self.logger.info(f"Loaded {len(self.recent_notifications)} recent notifications from storage")
         except Exception as e:
-            self.logger.error(f"Error loading recent notifications: {str(e)}")
+            self.logger.error(f"Error loading recent notifications: {str(e)}", exc_info=True)
             self.recent_notifications = {}
     
     def _save_notifications(self):
@@ -67,7 +67,7 @@ class TelegramNotifier:
             with open(notification_file, 'w') as f:
                 json.dump(serializable_notifications, f, indent=2)
         except Exception as e:
-            self.logger.error(f"Error saving recent notifications: {str(e)}")
+            self.logger.error(f"Error saving recent notifications: {str(e)}", exc_info=True)
     
     def _clean_old_notifications(self):
         """Remove notifications older than the cooldown period"""
@@ -141,7 +141,7 @@ class TelegramNotifier:
             bool: True if message was sent successfully
         """
         if not chat_id and not self.chat_id:
-            self.logger.error("No chat ID provided")
+            self.logger.error("No chat ID provided", exc_info=True)
             return False
         
         target_chat_id = chat_id or self.chat_id
@@ -161,7 +161,7 @@ class TelegramNotifier:
             return True
             
         except Exception as e:
-            self.logger.error(f"Error sending Telegram message: {str(e)}")
+            self.logger.error(f"Error sending Telegram message: {str(e)}", exc_info=True)
             return False
     
     def send_analysis_alert(self, symbol: str, analysis: Dict[str, Any], chat_id: Optional[str] = None) -> bool:
@@ -242,7 +242,7 @@ class TelegramNotifier:
             return self.send_message(message, chat_id)
             
         except Exception as e:
-            self.logger.error(f"Error creating analysis alert: {str(e)}")
+            self.logger.error(f"Error creating analysis alert: {str(e)}", exc_info=True)
             return False
     
     def get_updates(self) -> List[Dict[str, Any]]:
@@ -261,11 +261,11 @@ class TelegramNotifier:
             if data.get("ok"):
                 return data.get("result", [])
             else:
-                self.logger.error(f"Error getting updates: {data.get('description')}")
+                self.logger.error(f"Error getting updates: {data.get('description')}", exc_info=True)
                 return []
                 
         except Exception as e:
-            self.logger.error(f"Error getting updates: {str(e)}")
+            self.logger.error(f"Error getting updates: {str(e)}", exc_info=True)
             return []
     
     def get_chat_id(self) -> Optional[str]:

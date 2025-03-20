@@ -190,14 +190,14 @@ class MarketConditionTester:
                 if "data" in klines:
                     return klines["data"]
                 else:
-                    self.logger.error(f"Failed to get klines data: {klines}")
+                    self.logger.error(f"Failed to get klines data: {klines}", exc_info=True)
                     return []
             else:
                 # Use sample data for testing without KuCoin client
                 self.logger.warning("No KuCoin client provided, using sample data")
                 return self._generate_sample_data(start_timestamp, end_timestamp)
         except Exception as e:
-            self.logger.error(f"Error getting historical data: {str(e)}")
+            self.logger.error(f"Error getting historical data: {str(e)}", exc_info=True)
             return []
     
     def _generate_sample_data(self, start_timestamp: int, end_timestamp: int) -> List[List]:
@@ -263,7 +263,7 @@ class MarketConditionTester:
                 analysis = self.analysis_engine.analyze_symbol(symbol, window)
                 analysis_results.append(analysis)
             except Exception as e:
-                self.logger.error(f"Error analyzing window {i}: {str(e)}")
+                self.logger.error(f"Error analyzing window {i}: {str(e)}", exc_info=True)
         
         return analysis_results
     
@@ -371,7 +371,7 @@ class MarketConditionTester:
             output_file (str, optional): Path to save the plot
         """
         if "evaluation" not in results or "error" in results["evaluation"]:
-            self.logger.error("Cannot plot results: Invalid results data")
+            self.logger.error("Cannot plot results: Invalid results data", exc_info=True)
             return
         
         evaluation = results["evaluation"]

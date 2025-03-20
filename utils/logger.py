@@ -209,7 +209,7 @@ class Logger:
                             f"Exception in {func.__name__}: {str(e)}\n{traceback.format_exc()}"
                         )
                     else:
-                        self.logger.error(f"Exception in {func.__name__}: {str(e)}")
+                        self.logger.error(f"Exception in {func.__name__}: {str(e)}", exc_info=True)
                     
                     # Re-raise the exception
                     raise

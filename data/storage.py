@@ -3,6 +3,17 @@ import json
 import logging
 from datetime import datetime
 from typing import List, Dict, Any, Optional
+import numpy as np
+
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return super(NumpyEncoder, self).default(obj)
 
 class SymbolStorage:
     """
@@ -42,7 +53,7 @@ class SymbolStorage:
             with open(self.symbols_file, 'r') as f:
                 return json.load(f)
         except (FileNotFoundError, json.JSONDecodeError) as e:
-            self.logger.error(f"Error reading symbols file: {str(e)}")
+            self.logger.error(f"Error reading symbols file: {str(e)}", exc_info=True)
             return []
     
     def add_symbol(self, symbol: str) -> bool:
@@ -110,7 +121,7 @@ class SymbolStorage:
             with open(self.symbols_file, 'w') as f:
                 json.dump(symbols, f, indent=2)
         except Exception as e:
-            self.logger.error(f"Error saving symbols file: {str(e)}")
+            self.logger.error(f"Error saving symbols file: {str(e)}", exc_info=True)
 
     def store_analysis(self, symbol: str, analysis: Dict[str, Any]) -> bool:
         """
@@ -131,20 +142,20 @@ class SymbolStorage:
             # Store latest analysis
             latest_file = os.path.join(symbol_dir, "latest.json")
             with open(latest_file, 'w') as f:
-                json.dump(analysis, f, indent=2)
+                json.dump(analysis, f, indent=2, cls=NumpyEncoder)
             
             # Store historical analysis with timestamp
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             history_file = os.path.join(symbol_dir, f"{timestamp}.json")
             with open(history_file, 'w') as f:
-                json.dump(analysis, f, indent=2)
+                json.dump(analysis, f, indent=2, cls=NumpyEncoder)
             
             # Maintain history limit (keep last n analyses)
             self._prune_history(symbol_dir, self.n_files)
             
             return True
         except Exception as e:
-            self.logger.error(f"Error storing analysis for {symbol}: {str(e)}")
+            self.logger.error(f"Error storing analysis for {symbol}: {str(e)}", exc_info=True)
             return False
     
     def get_analysis(self, symbol: str) -> Optional[Dict[str, Any]]:
@@ -165,7 +176,7 @@ class SymbolStorage:
                     return json.load(f)
             return None
         except (FileNotFoundError, json.JSONDecodeError) as e:
-            self.logger.error(f"Error reading analysis for {symbol}: {str(e)}")
+            self.logger.error(f"Error reading analysis for {symbol}: {str(e)}", exc_info=True)
             return None
     
     def get_analysis_history(self, symbol: str, limit: int = 10) -> List[Dict[str, Any]]:
@@ -203,7 +214,7 @@ class SymbolStorage:
             
             return history
         except Exception as e:
-            self.logger.error(f"Error reading history for {symbol}: {str(e)}")
+            self.logger.error(f"Error reading history for {symbol}: {str(e)}", exc_info=True)
             return []
     
     def _prune_history(self, symbol_dir: str, max_files: int) -> None:
@@ -227,7 +238,7 @@ class SymbolStorage:
                 for file in history_files[:(len(history_files) - max_files)]:
                     os.remove(os.path.join(symbol_dir, file))
         except Exception as e:
-            self.logger.error(f"Error pruning history in {symbol_dir}: {str(e)}")
+            self.logger.error(f"Error pruning history in {symbol_dir}: {str(e)}", exc_info=True)
 
     def fetch_symbols_from_kucoin(self, kucoin_client):
         """
@@ -245,7 +256,7 @@ class SymbolStorage:
             response = response.get("data", [])
             
             if "error" in response:
-                self.logger.error(f"Error fetching symbols: {response['error']}")
+                self.logger.error(f"Error fetching symbols: {response['error']}", exc_info=True)
                 return []
             
             # Filter symbols based on requirements
@@ -280,7 +291,7 @@ class SymbolStorage:
             return filtered_symbols
             
         except Exception as e:
-            self.logger.error(f"Error fetching symbols from KuCoin: {str(e)}")
+            self.logger.error(f"Error fetching symbols from KuCoin: {str(e)}", exc_info=True)
             return []
 
     def initialize_symbols_from_kucoin(self, kucoin_client):
@@ -308,5 +319,5 @@ class SymbolStorage:
             return True
             
         except Exception as e:
-            self.logger.error(f"Error initializing symbols from KuCoin: {str(e)}")
+            self.logger.error(f"Error initializing symbols from KuCoin: {str(e)}", exc_info=True)
             return False
