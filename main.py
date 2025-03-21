@@ -5,10 +5,15 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import time
 import os
 import threading
+import json
+import numpy as np
+from win10toast import ToastNotifier
+toaster = ToastNotifier()
 
 from api.routes import app
 from data.storage import SymbolStorage
 from analysis.engine import AnalysisEngine
+from analysis.multi_timeframe import MultiTimeframeAnalyzer
 from data.kucoin_client import KuCoinClient
 from config.settings import Settings
 from utils.logger import Logger
@@ -19,6 +24,16 @@ from concurrent.futures import ThreadPoolExecutor
 
 from datetime import datetime, timedelta
 from config.user_config import UserConfig
+
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return super(NumpyEncoder, self).default(obj)
 
 # Initialize user config
 user_config = UserConfig()
@@ -39,6 +54,7 @@ kucoin_client = KuCoinClient(
     api_passphrase=settings.kucoin_api_passphrase
 )
 analysis_engine = AnalysisEngine(config=user_config.get_config())
+analysis_multiframe_engine = MultiTimeframeAnalyzer(analysis_engine)
 
 # Initialize symbols from KuCoin instead of using symbols.json
 symbol_storage.initialize_symbols_from_kucoin(kucoin_client)
@@ -194,6 +210,14 @@ def analyze_symbol(symbol):
             
         # Analyze symbol using available data for primary timeframe
         analysis = analysis_engine.analyze_symbol(symbol, timeframe_data[primary_tf])
+        with open('individual_analysis_summary.json', 'w') as file:
+            json.dump(analysis, file, indent=4, cls=NumpyEncoder)
+            
+        analysis_multi = analysis_multiframe_engine.analyze(symbol, timeframe_data)
+        with open('multi_analysis_summary.json', 'w') as file:
+            json.dump(analysis_multi, file, indent=4, cls=NumpyEncoder)
+
+        analysis = analysis_multi.copy()
         
         # Add current price if not present
         if "price" not in analysis and current_price > 0:
@@ -274,6 +298,7 @@ async def analyze_all_symbols_async():
                     logger.error(f"Error in async analysis task: {str(e)}", exc_info=True)
         
         logger.info("Async analysis cycle completed")
+        toaster.show_toast("Completed Analysis", "Done.", duration=5)
     except Exception as e:
         logger.error(f"Error in async analysis task: {str(e)}", exc_info=True)
 

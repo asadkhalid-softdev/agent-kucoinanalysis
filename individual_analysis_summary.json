@@ -1,0 +1,149 @@
+{
+    "symbol": "LVVA-USDT",
+    "timestamp": "2025-03-21T02:21:20.693100",
+    "price": 0.00654,
+    "indicators": {
+        "SMA_20": {
+            "indicator": "SMA_20",
+            "value": 0.0065171000000000005,
+            "sma_trend": "down",
+            "signal": "bullish",
+            "strength": 0.014055331359039691
+        },
+        "SMA_50": {
+            "indicator": "SMA_50",
+            "value": 0.006533219999999999,
+            "sma_trend": "up",
+            "signal": "bullish",
+            "strength": 0.0062266386253648776
+        },
+        "EMA_9": {
+            "indicator": "EMA_9",
+            "value": 0.0065615772021760145,
+            "ema_trend": "down",
+            "signal": "bearish",
+            "strength": 0.019730502144081008
+        },
+        "EMA_21": {
+            "indicator": "EMA_21",
+            "value": 0.006539286918593378,
+            "ema_trend": "up",
+            "signal": "bullish",
+            "strength": 0.0006542744634074893
+        },
+        "RSI": {
+            "indicator": "RSI",
+            "value": 50.320798484991776,
+            "rsi_trend": "down",
+            "longer_rsi_trend": "down",
+            "signal": "neutral",
+            "strength": 0.0
+        },
+        "MACD": {
+            "indicator": "MACD",
+            "value": {
+                "macd": 1.8532136056430802e-05,
+                "signal": 1.0808503376759333e-05,
+                "histogram": 7.723632679671469e-06,
+                "macd_trend": "down",
+                "hist_trend": "down",
+                "macd_position": "above"
+            },
+            "signal": "bullish",
+            "strength": 0.41369961676576883
+        },
+        "BBANDS": {
+            "indicator": "BBANDS",
+            "value": {
+                "upper": 0.006696320422942043,
+                "middle": 0.0065171000000000005,
+                "lower": 0.006337879577057958,
+                "bandwidth": 0.05500005307331248,
+                "percent_b": 0.5638878081640418,
+                "trend_direction": "down"
+            },
+            "signal": "neutral",
+            "strength": 0.0
+        },
+        "OBV": {
+            "indicator": "OBV",
+            "value": 10787253.0,
+            "obv_sma": 10627071.85,
+            "short_term_trend": "down",
+            "medium_term_trend": "down",
+            "obv_change": -0.001340340728722091,
+            "pattern": {
+                "confirmation": false,
+                "divergence": false,
+                "type": null
+            },
+            "signal": "neutral",
+            "strength": 0.0
+        },
+        "STOCH": {
+            "indicator": "STOCH",
+            "value": {
+                "k": 65.10305614783223,
+                "d": 69.3200663349917,
+                "k_trend": "down",
+                "d_trend": "down",
+                "price_trend": "down"
+            },
+            "signal": "neutral",
+            "strength": 0.0
+        },
+        "ADX": {
+            "indicator": "ADX",
+            "value": {
+                "adx": 12.525415030933107,
+                "plus_di": 23.46741437000636,
+                "minus_di": 19.302889283663937,
+                "trend_strength": "weak"
+            },
+            "signal": "neutral",
+            "strength": 0.0
+        },
+        "FIBONACCI": {
+            "indicator": "FIBONACCI",
+            "value": {
+                "levels": {
+                    "0.0": 0.00699,
+                    "0.236": 0.0067901079999999996,
+                    "0.382": 0.0066664459999999995,
+                    "0.5": 0.006566499999999999,
+                    "0.618": 0.006466554,
+                    "0.786": 0.006324258,
+                    "1.0": 0.006143,
+                    "1.272": 0.005912616,
+                    "1.618": 0.0056195540000000006,
+                    "2.0": 0.005296,
+                    "2.618": 0.004772554,
+                    "4.236": 0.0034021080000000013
+                },
+                "trend": "downtrend",
+                "recent_trend": "down",
+                "closest_level": 0.5,
+                "closest_price": 0.006566499999999999,
+                "distance_pct": 0.004051987767584039,
+                "next_level_above": 0.5,
+                "next_level_above_price": 0.006566499999999999,
+                "potential_profit_pct": 0.4051987767584039,
+                "next_level_below": 0.618,
+                "next_level_below_price": 0.006466554,
+                "potential_loss_pct": 1.1230275229357733,
+                "risk_reward_ratio": 0.3608093020722676
+            },
+            "signal": "bearish",
+            "strength": 0.75
+        }
+    },
+    "sentiment": {
+        "overall": "neutral",
+        "strength": "none",
+        "confidence": 0.46,
+        "score": 0.0,
+        "volume": 3442
+    },
+    "analysis_summary": "LVVA-USDT is trading at 0.00654 (-0.29% change) Overall sentiment: neutral (confidence: 0.46) MACD shows bullish momentum",
+    "volume": 3442
+}

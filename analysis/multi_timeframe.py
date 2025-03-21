@@ -1,6 +1,9 @@
 import pandas as pd
 import numpy as np
 from collections import defaultdict
+from config.settings import Settings
+
+settings = Settings()
 
 class MultiTimeframeAnalyzer:
     """
@@ -36,6 +39,9 @@ class MultiTimeframeAnalyzer:
         Returns:
             dict: Combined analysis results
         """
+        
+        settings = Settings()
+
         # Analyze each timeframe
         timeframe_results = {}
         all_sentiments = []
@@ -61,7 +67,7 @@ class MultiTimeframeAnalyzer:
         combined_sentiment = self._combine_sentiments(all_sentiments)
         
         # Get the primary timeframe result (usually 1hour)
-        primary_timeframe = "1hour"
+        primary_timeframe = settings.main_timeframe
         primary_result = timeframe_results.get(primary_timeframe, next(iter(timeframe_results.values())) if timeframe_results else None)
         
         if not primary_result:
@@ -134,28 +140,28 @@ class MultiTimeframeAnalyzer:
             score = base_value * multiplier
             weighted_score += score * item["weight"] / total_weight
         
-        # Determine overall sentiment and strength based on weighted score
-        if weighted_score > 0.5:
-            overall = "buy"
-            strength = "strong"
-        elif weighted_score > 0.2:
-            overall = "buy"
-            strength = "moderate"
-        elif weighted_score > 0.05:
-            overall = "buy"
-            strength = "weak"
-        elif weighted_score < -0.5:
-            overall = "sell"
-            strength = "strong"
-        elif weighted_score < -0.2:
-            overall = "sell"
-            strength = "moderate"
-        elif weighted_score < -0.05:
-            overall = "sell"
-            strength = "weak"
-        else:
-            overall = "neutral"
-            strength = "none"
+            # Determine overall sentiment and strength
+            if weighted_score >= 0.5:
+                overall = "buy"
+                strength = "strong"
+            elif weighted_score >= 0.3:
+                overall = "buy"
+                strength = "moderate"
+            elif weighted_score >= 0.05:
+                overall = "buy"
+                strength = "weak"
+            elif weighted_score <= -0.5:
+                overall = "sell"
+                strength = "strong"
+            elif weighted_score <= -0.3:
+                overall = "sell"
+                strength = "moderate"
+            elif weighted_score <= -0.05:
+                overall = "sell"
+                strength = "weak"
+            else:
+                overall = "neutral"
+                strength = "none"
         
         # Calculate confidence based on agreement among timeframes
         confidence_scores = []
@@ -187,7 +193,8 @@ class MultiTimeframeAnalyzer:
             str: Analysis summary
         """
         # Get primary timeframe (1hour or first available)
-        primary_tf = "1hour" if "1hour" in timeframe_results else next(iter(timeframe_results.keys()))
+        settings = Settings()
+        primary_tf = settings.main_timeframe if settings.main_timeframe in timeframe_results else next(iter(timeframe_results.keys()))
         primary_result = timeframe_results[primary_tf]
         
         # Start with basic information

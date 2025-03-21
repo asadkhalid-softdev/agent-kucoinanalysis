@@ -1,0 +1,149 @@
+{
+    "symbol": "VEMP-USDT",
+    "timestamp": "2025-03-21T01:40:20.177329",
+    "price": 0.001036,
+    "indicators": {
+        "SMA_20": {
+            "indicator": "SMA_20",
+            "value": 0.00106875,
+            "sma_trend": "down",
+            "signal": "bearish",
+            "strength": 0.18385964912280683
+        },
+        "SMA_50": {
+            "indicator": "SMA_50",
+            "value": 0.00105138,
+            "sma_trend": "up",
+            "signal": "bearish",
+            "strength": 0.05851357263786605
+        },
+        "EMA_9": {
+            "indicator": "EMA_9",
+            "value": 0.0010452670211601814,
+            "ema_trend": "down",
+            "signal": "bearish",
+            "strength": 0.05319418467768444
+        },
+        "EMA_21": {
+            "indicator": "EMA_21",
+            "value": 0.001056833831477761,
+            "ema_trend": "down",
+            "signal": "bearish",
+            "strength": 0.11828064653435222
+        },
+        "RSI": {
+            "indicator": "RSI",
+            "value": 41.75009962493384,
+            "rsi_trend": "down",
+            "longer_rsi_trend": "up",
+            "signal": "slightly_bearish",
+            "strength": 0.20624750937665404
+        },
+        "MACD": {
+            "indicator": "MACD",
+            "value": {
+                "macd": -6.963919217723661e-06,
+                "signal": -4.945456882333218e-07,
+                "histogram": -6.469373529490339e-06,
+                "macd_trend": "down",
+                "hist_trend": "up",
+                "macd_position": "below"
+            },
+            "signal": "bearish",
+            "strength": 0.8
+        },
+        "BBANDS": {
+            "indicator": "BBANDS",
+            "value": {
+                "upper": 0.0011266080158664378,
+                "middle": 0.00106875,
+                "lower": 0.0010108919841335623,
+                "bandwidth": 0.10827231039333382,
+                "percent_b": 0.2169795791511267,
+                "trend_direction": "down"
+            },
+            "signal": "bearish",
+            "strength": 0.4238971502523404
+        },
+        "OBV": {
+            "indicator": "OBV",
+            "value": 98801934.0,
+            "obv_sma": 99327422.75,
+            "short_term_trend": "up",
+            "medium_term_trend": "down",
+            "obv_change": 0.014311344944767107,
+            "pattern": {
+                "confirmation": false,
+                "divergence": false,
+                "type": null
+            },
+            "signal": "neutral",
+            "strength": 0.0
+        },
+        "STOCH": {
+            "indicator": "STOCH",
+            "value": {
+                "k": 21.649484536082436,
+                "d": 18.693183202944095,
+                "k_trend": "up",
+                "d_trend": "up",
+                "price_trend": "down"
+            },
+            "signal": "bearish",
+            "strength": 0.6
+        },
+        "ADX": {
+            "indicator": "ADX",
+            "value": {
+                "adx": 28.1079997842416,
+                "plus_di": 15.508459227449885,
+                "minus_di": 18.56976433024769,
+                "trend_strength": "moderate"
+            },
+            "signal": "bearish",
+            "strength": 0.04302358158446921
+        },
+        "FIBONACCI": {
+            "indicator": "FIBONACCI",
+            "value": {
+                "levels": {
+                    "0.0": 0.001137,
+                    "0.236": 0.001066908,
+                    "0.382": 0.001023546,
+                    "0.5": 0.0009885,
+                    "0.618": 0.0009534540000000001,
+                    "0.786": 0.000903558,
+                    "1.0": 0.00084,
+                    "1.272": 0.0007592160000000001,
+                    "1.618": 0.0006564540000000001,
+                    "2.0": 0.0005430000000000001,
+                    "2.618": 0.00035945400000000015,
+                    "4.236": -0.00012109199999999973
+                },
+                "trend": "downtrend",
+                "recent_trend": "down",
+                "closest_level": 0.382,
+                "closest_price": 0.001023546,
+                "distance_pct": 0.012021235521235586,
+                "next_level_above": 0.236,
+                "next_level_above_price": 0.001066908,
+                "potential_profit_pct": 2.9833976833976896,
+                "next_level_below": 0.382,
+                "next_level_below_price": 0.001023546,
+                "potential_loss_pct": 1.2021235521235585,
+                "risk_reward_ratio": 2.481772924361643
+            },
+            "signal": "neutral",
+            "strength": 0.0
+        }
+    },
+    "sentiment": {
+        "overall": "sell",
+        "strength": "weak",
+        "confidence": 0.7,
+        "score": -0.2,
+        "volume": 266445
+    },
+    "analysis_summary": "VEMP-USDT is trading at 0.001036 (-0.86% change) Overall sentiment: weak sell (confidence: 0.70) MACD shows bearish momentum Price is near the upper Bollinger Band, suggesting potential overbought conditions",
+    "volume": 266445
+}

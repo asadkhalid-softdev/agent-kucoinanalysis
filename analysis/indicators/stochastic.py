@@ -42,13 +42,13 @@ class StochasticOscillator:
         current_d = stoch[d_col].iloc[0]
         
         # Get previous values for trend determination
-        prev_k = stoch[k_col].iloc[2] if len(stoch) > 1 else current_k
-        prev_d = stoch[d_col].iloc[2] if len(stoch) > 1 else current_d
+        prev_k = stoch[k_col].iloc[1] if len(stoch) > 1 else current_k
+        prev_d = stoch[d_col].iloc[1] if len(stoch) > 1 else current_d
         
         # Get more history for trend confirmation
         if len(stoch) >= 5:
-            k_5_periods_ago = stoch[k_col].iloc[5]
-            d_5_periods_ago = stoch[d_col].iloc[5]
+            k_5_periods_ago = stoch[k_col].iloc[4]
+            d_5_periods_ago = stoch[d_col].iloc[4]
             k_trend = "up" if current_k > k_5_periods_ago else "down"
             d_trend = "up" if current_d > d_5_periods_ago else "down"
         else:
