@@ -10,10 +10,10 @@
   },
   "telegram": {
     "telegram_notifications_enabled": true,
-    "telegram_notify_on_sentiment": ["moderate buy", "strong buy"],
-    "telegram_notify_on_confidence": 0.50,
+    "telegram_notify_on_sentiment": ["weak buy"],
+    "telegram_notify_on_confidence": 0,
     "telegram_notify_on_volume": 10000,
-    "telegram_notify_on_plr": 1,
+    "telegram_notify_on_plr": 0,
     "telegram_notify_on_rsi_buy": 70,
     "telegram_notify_on_profit_buy": 0
   },

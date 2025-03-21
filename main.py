@@ -7,8 +7,8 @@ import os
 import threading
 import json
 import numpy as np
-from win10toast import ToastNotifier
-toaster = ToastNotifier()
+# from win10toast import ToastNotifier
+# toaster = ToastNotifier()
 
 from api.routes import app
 from data.storage import SymbolStorage
@@ -210,12 +210,12 @@ def analyze_symbol(symbol):
             
         # Analyze symbol using available data for primary timeframe
         analysis = analysis_engine.analyze_symbol(symbol, timeframe_data[primary_tf])
-        with open('individual_analysis_summary.json', 'w') as file:
-            json.dump(analysis, file, indent=4, cls=NumpyEncoder)
+        # with open('individual_analysis_summary.json', 'w') as file:
+        #     json.dump(analysis, file, indent=4, cls=NumpyEncoder)
             
         analysis_multi = analysis_multiframe_engine.analyze(symbol, timeframe_data)
-        with open('multi_analysis_summary.json', 'w') as file:
-            json.dump(analysis_multi, file, indent=4, cls=NumpyEncoder)
+        # with open('multi_analysis_summary.json', 'w') as file:
+        #     json.dump(analysis_multi, file, indent=4, cls=NumpyEncoder)
 
         analysis = analysis_multi.copy()
         
@@ -298,7 +298,7 @@ async def analyze_all_symbols_async():
                     logger.error(f"Error in async analysis task: {str(e)}", exc_info=True)
         
         logger.info("Async analysis cycle completed")
-        toaster.show_toast("Completed Analysis", "Done.", duration=5)
+        # toaster.show_toast("Completed Analysis", "Done.", duration=5)
     except Exception as e:
         logger.error(f"Error in async analysis task: {str(e)}", exc_info=True)
 
