@@ -7,8 +7,15 @@ import os
 import threading
 import json
 import numpy as np
-# from win10toast import ToastNotifier
-# toaster = ToastNotifier()
+
+import platform
+
+# Get the general operating system
+system = platform.system()  # Returns 'Linux' for all Linux distributions
+
+if system.lower() == "windows":
+    from win10toast import ToastNotifier
+    toaster = ToastNotifier()
 
 from api.routes import app
 from data.storage import SymbolStorage
@@ -156,7 +163,7 @@ def analyze_symbol(symbol):
                     time.sleep(0.5) 
 
                     # Check if we have enough data
-                    if "error" not in klines and len(klines) >= min_candles:
+                    if "error" not in klines and len(klines) >= 50: # min_candles:
                         timeframe_data[timeframe] = klines
                         logger.info(f"Retrieved {len(klines)} {timeframe} candles for {symbol}")
                         break
@@ -217,7 +224,8 @@ def analyze_symbol(symbol):
         # with open('multi_analysis_summary.json', 'w') as file:
         #     json.dump(analysis_multi, file, indent=4, cls=NumpyEncoder)
 
-        analysis = analysis_multi.copy()
+        if len(timeframe_data) > 1:
+            analysis = analysis_multi.copy()
         
         # Add current price if not present
         if "price" not in analysis and current_price > 0:
@@ -239,6 +247,7 @@ def analyze_symbol(symbol):
         if telegram_notifier and "sentiment" in analysis and settings.telegram_notifications_enabled:
             sentiment = analysis["sentiment"]
             confidence = sentiment.get("confidence", 0.0)
+            score = sentiment.get("score", 0.0)
             sentiment_key = f"{sentiment.get('strength', 'none')} {sentiment.get('overall', 'neutral')}"
             volume = analysis.get("volume", 0.0)
             potential_profit_pct = analysis.get("indicators", {}).get("FIBONACCI", {}).get("value", {}).get("potential_profit_pct", settings.telegram_notify_on_profit_buy)
@@ -248,6 +257,8 @@ def analyze_symbol(symbol):
             # Send notification for strong buy signals
             if sentiment_key.lower() in settings.telegram_notify_on_sentiment and \
             confidence >= settings.telegram_notify_on_confidence and \
+            score >= settings.score_low and \
+            score <= settings.score_high and \
             volume >= settings.telegram_notify_on_volume and \
             risk_reward_ratio >= settings.telegram_notify_on_plr and \
             rsi <= settings.telegram_notify_on_rsi_buy and \
@@ -298,7 +309,8 @@ async def analyze_all_symbols_async():
                     logger.error(f"Error in async analysis task: {str(e)}", exc_info=True)
         
         logger.info("Async analysis cycle completed")
-        # toaster.show_toast("Completed Analysis", "Done.", duration=5)
+        if system.lower() == "windows":
+            toaster.show_toast("Completed Analysis", "Done.", duration=5)
     except Exception as e:
         logger.error(f"Error in async analysis task: {str(e)}", exc_info=True)
 

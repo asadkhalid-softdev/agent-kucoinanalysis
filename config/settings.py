@@ -38,6 +38,11 @@ class Settings(BaseSettings):
     telegram_notifications_enabled: bool = user_config.get_config().get("telegram", {}).get("telegram_notifications_enabled", False)
     telegram_notify_on_sentiment: list = user_config.get_config().get("telegram", {}).get("telegram_notify_on_sentiment", ["strong buy"])
     telegram_notify_on_confidence: float = user_config.get_config().get("telegram", {}).get("telegram_notify_on_confidence", 0)
+
+    telegram_notify_on_score: str = user_config.get_config().get("telegram", {}).get("telegram_notify_on_score", "0_1")
+    score_low: float  = float(telegram_notify_on_score.split("_")[0])
+    score_high: float  = float(telegram_notify_on_score.split("_")[-1])
+
     telegram_notify_on_volume: float = user_config.get_config().get("telegram", {}).get("telegram_notify_on_volume", 100000)
     telegram_notify_on_plr: float = user_config.get_config().get("telegram", {}).get("telegram_notify_on_plr", 0.0)
     telegram_notify_on_rsi_buy: float = user_config.get_config().get("telegram", {}).get("telegram_notify_on_rsi_buy", 100)
