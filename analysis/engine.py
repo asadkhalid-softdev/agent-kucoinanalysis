@@ -140,9 +140,9 @@ class AnalysisEngine:
         """
         # KuCoin API returns data in format [timestamp, open, close, high, low, volume, ...]
         # columns = ['timestamp', 'open', 'close', 'high', 'low', 'volume']
-        columns = ['timestamp', 'open', 'close', 'high', 'low', 'volume', 'amount']
+        columns = ['timestamp', 'open', 'close', 'high', 'low', 'amount', 'volume']
         df = pd.DataFrame(klines_data, columns=columns)
-        
+
         # Convert types
         for col in ['open', 'close', 'high', 'low', 'volume']:
             df[col] = pd.to_numeric(df[col])

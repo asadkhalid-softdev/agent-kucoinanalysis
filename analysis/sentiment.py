@@ -121,5 +121,6 @@ class SentimentAnalyzer:
             "strength": strength,
             "confidence": round(confidence, 2),
             "score": round(weighted_score, 2),
-            "volume": df['volume'].iloc[-1]
+            "volume": df['volume'].iloc[-1],
+            "price": df['close'].iloc[-1]
         }
