@@ -140,28 +140,22 @@ class MultiTimeframeAnalyzer:
             score = base_value * multiplier
             weighted_score += score * item["weight"] / total_weight
         
-            # Determine overall sentiment and strength
-            if weighted_score >= 0.5:
-                overall = "buy"
-                strength = "strong"
-            elif weighted_score >= 0.3:
-                overall = "buy"
-                strength = "moderate"
-            elif weighted_score >= 0.05:
-                overall = "buy"
-                strength = "weak"
-            elif weighted_score <= -0.5:
-                overall = "sell"
-                strength = "strong"
-            elif weighted_score <= -0.3:
-                overall = "sell"
-                strength = "moderate"
-            elif weighted_score <= -0.05:
-                overall = "sell"
-                strength = "weak"
-            else:
-                overall = "neutral"
-                strength = "none"
+        # Revised sentiment thresholds for 15m trading
+        if weighted_score >= 0.65:        # Extreme bullish confirmation
+            overall = "buy"
+            strength = "strong"
+        elif weighted_score >= 0.45:      # Clear bullish momentum
+            overall = "buy" 
+            strength = "moderate"
+        elif weighted_score >= 0.25:      # Potential reversal signal
+            overall = "buy"
+            strength = "weak"
+        elif weighted_score <= -0.6:      # Extreme bearish (contrarian opportunity)
+            overall = "buy"
+            strength = "reversal"
+        else:
+            overall = "neutral" if weighted_score > -0.6 else "hold"
+            strength = "none"
         
         # Calculate confidence based on agreement among timeframes
         confidence_scores = []

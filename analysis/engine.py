@@ -185,8 +185,8 @@ class AnalysisEngine:
         summary_parts.append(f"Overall sentiment: {sentiment_str} (confidence: {sentiment['confidence']:.2f})")
         
         # Add key indicator insights
-        if 'RSI_14' in indicator_results:
-            rsi = indicator_results['RSI_14']
+        if 'RSI' in indicator_results:
+            rsi = indicator_results['RSI']
             rsi_value = rsi['value']
             if rsi_value > 70:
                 summary_parts.append(f"RSI is overbought at {rsi_value:.2f}")
