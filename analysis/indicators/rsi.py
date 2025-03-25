@@ -30,6 +30,9 @@ class RSI:
             dict: Signal information
         """
         rsi = self.calculate(df)
+        # print(df)
+        # print(rsi)
+
         current_rsi = rsi.iloc[-1]
         
         # Get previous RSI values to determine trend

@@ -33,22 +33,26 @@ class StochasticOscillator:
             dict: Signal information
         """
         stoch = self.calculate(df)
+        stoch = stoch.sort_index(ascending=False)
+
+        # print(df)
+        # print(stoch)
 
         # Get column names from pandas-ta output
         k_col = f"STOCHk_{self.k_period}_{self.d_period}_{self.smooth_k}"
         d_col = f"STOCHd_{self.k_period}_{self.d_period}_{self.smooth_k}"
 
-        current_k = stoch[k_col].iloc[0]
-        current_d = stoch[d_col].iloc[0]
+        current_k = stoch[k_col].iloc[-1]
+        current_d = stoch[d_col].iloc[-1]
         
         # Get previous values for trend determination
-        prev_k = stoch[k_col].iloc[1] if len(stoch) > 1 else current_k
-        prev_d = stoch[d_col].iloc[1] if len(stoch) > 1 else current_d
+        prev_k = stoch[k_col].iloc[-2] if len(stoch) > 1 else current_k
+        prev_d = stoch[d_col].iloc[-2] if len(stoch) > 1 else current_d
         
         # Get more history for trend confirmation
         if len(stoch) >= 5:
-            k_5_periods_ago = stoch[k_col].iloc[4]
-            d_5_periods_ago = stoch[d_col].iloc[4]
+            k_5_periods_ago = stoch[k_col].iloc[-5]
+            d_5_periods_ago = stoch[d_col].iloc[-5]
             k_trend = "up" if current_k > k_5_periods_ago else "down"
             d_trend = "up" if current_d > d_5_periods_ago else "down"
         else:

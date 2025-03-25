@@ -193,21 +193,19 @@ class AnalysisEngine:
             elif rsi_value < 30:
                 summary_parts.append(f"RSI is oversold at {rsi_value:.2f}")
         
-        if any(k.startswith('MACD') for k in indicator_results):
-            macd_key = next(k for k in indicator_results if k.startswith('MACD'))
-            macd = indicator_results[macd_key]
-            if macd['signal'] in ['bullish', 'strongly_bullish']:
+        if 'MACD' in indicator_results:
+            macd = indicator_results['MACD']
+            if 'bullish' in macd['signal']:
                 summary_parts.append("MACD shows bullish momentum")
-            elif macd['signal'] in ['bearish', 'strongly_bearish']:
+            elif 'bearish' in macd['signal']:
                 summary_parts.append("MACD shows bearish momentum")
         
-        if any(k.startswith('BBANDS') for k in indicator_results):
-            bb_key = next(k for k in indicator_results if k.startswith('BBANDS'))
-            bb = indicator_results[bb_key]
-            if bb['signal'] == 'bullish':
-                summary_parts.append("Price is near the lower Bollinger Band, suggesting potential oversold conditions")
-            elif bb['signal'] == 'bearish':
+        if 'BBANDS' in indicator_results:
+            bb = indicator_results['BBANDS']
+            if 'bullish' in bb['signal']:
                 summary_parts.append("Price is near the upper Bollinger Band, suggesting potential overbought conditions")
+            elif 'bearish' in bb['signal']:
+                summary_parts.append("Price is near the lower Bollinger Band, suggesting potential oversold conditions")
         
         # Combine all parts
         return " ".join(summary_parts)

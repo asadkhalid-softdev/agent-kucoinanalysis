@@ -19,15 +19,16 @@ class SentimentAnalyzer:
     
     # Indicator importance weights (can be adjusted)
     INDICATOR_WEIGHTS = {
-        "RSI": 1.2,       # Increased - highly reliable on 1H charts
-        "MACD": 1.3,      # Increased - excellent trend and momentum indicator for 1H
-        "BBANDS": 1.0,    # Increased - volatility and price extremes are meaningful on 1H
-        "SMA": 0.9,       # Increased - trend identification is important
-        "EMA": 1.1,       # Increased - responsive trend signals work well on 1H
-        "OBV": 0.8,       # Increased - volume confirmation is valuable
-        "STOCH": 0.9,     # Increased - momentum shifts are significant on 1H
-        "ADX": 0.8,       # Increased - trend strength is crucial for day trading
-        "FIBONACCI": 0.7  # Increased - support/resistance levels help with entries/exits
+        "VWAP": 1.4,      # Critical for intraday price validation [11][14][17]
+        "EMA": 1.3,       # 20-period EMA particularly effective for trend identification [13][17]
+        "MACD": 1.25,     # Maintains momentum tracking but reduced vs 1H due to more false signals [5][19]
+        "BBANDS": 1.1,    # Tightened bands work well with 15m volatility [9][18]
+        "RSI": 1.0,       # Use shorter lookback (9-11 periods) to reduce lag [12][16]
+        "OBV": 0.9,       # Volume confirmation crucial for breakout validation [19][20]
+        "ADX": 1.0,       # Essential for filtering low-strength trends in noisy markets [5][19]
+        "STOCH": 0.85,    # Useful but prone to whipsaws - pair with EMA [14][16]
+        "SMA": 0.7,       # Longer-period SMAs (50/100) for higher timeframe confluence [15][17]
+        "FIBONACCI": 0.5  # Less reliable on 15m - use only with cluster zones [9][14]
     }
     
     def __init__(self):
@@ -88,28 +89,22 @@ class SentimentAnalyzer:
             # Calculate weighted average sentiment score
             weighted_score = sum(score * weight for score, weight in type_scores) / total_weight if total_weight > 0 else 0.0
 
-            # Determine overall sentiment and strength
-            if weighted_score >= 0.5:
-                overall = "buy"
-                strength = "strong"
-            elif weighted_score >= 0.3:
-                overall = "buy"
-                strength = "moderate"
-            elif weighted_score >= 0.05:
-                overall = "buy"
-                strength = "weak"
-            elif weighted_score <= -0.5:
-                overall = "sell"
-                strength = "strong"
-            elif weighted_score <= -0.3:
-                overall = "sell"
-                strength = "moderate"
-            elif weighted_score <= -0.05:
-                overall = "sell"
-                strength = "weak"
-            else:
-                overall = "neutral"
-                strength = "none"
+        # Revised sentiment thresholds for 15m trading
+        if weighted_score >= 0.65:        # Extreme bullish confirmation
+            overall = "buy"
+            strength = "strong"
+        elif weighted_score >= 0.45:      # Clear bullish momentum
+            overall = "buy" 
+            strength = "moderate"
+        elif weighted_score >= 0.25:      # Potential reversal signal
+            overall = "buy"
+            strength = "weak"
+        elif weighted_score <= -0.6:      # Extreme bearish (contrarian opportunity)
+            overall = "buy"
+            strength = "reversal"
+        else:
+            overall = "neutral" if weighted_score > -0.6 else "hold"
+            strength = "none"
         
         # Calculate confidence based on agreement among indicators
         signal_values = [self._normalize_signal(s["signal"]) for s in indicator_signals]

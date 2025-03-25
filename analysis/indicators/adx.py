@@ -29,6 +29,8 @@ class AverageDirectionalIndex:
             dict: Signal information
         """
         adx_df = self.calculate(df)
+        # print(df)
+        # print(adx_df)
         
         # Get column names from pandas-ta output
         adx_col = f"ADX_{self.length}"

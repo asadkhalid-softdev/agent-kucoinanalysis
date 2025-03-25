@@ -32,6 +32,8 @@ class BollingerBands:
             dict: Signal information
         """
         bbands = self.calculate(df)
+        # print(df)
+        # print(bbands)
         
         # Get column names from pandas-ta output
         upper_col = f"BBU_{self.window}_{float(self.window_dev)}"

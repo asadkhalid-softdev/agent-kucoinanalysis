@@ -29,6 +29,8 @@ class OnBalanceVolume:
             dict: Signal information
         """
         obv = self.calculate(df)
+        # print(df)
+        # print(obv)
 
         # Calculate a SMA of OBV for trend identification
         obv_sma = ta.sma(obv, length=self.obv_sma_period)

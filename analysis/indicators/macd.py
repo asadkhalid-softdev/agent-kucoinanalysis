@@ -32,6 +32,9 @@ class MACD:
             dict: Signal information
         """
         macd_df = self.calculate(df)
+        macd_df = macd_df.sort_index(ascending=False)
+        # print(df)
+        # print(macd_df)
         
         # Get the column names from pandas-ta output
         macd_col = f"MACD_{self.fast}_{self.slow}_{self.signal_length}"
@@ -39,14 +42,14 @@ class MACD:
         hist_col = f"MACDh_{self.fast}_{self.slow}_{self.signal_length}"
         
         # Get current and previous values
-        current_macd = macd_df[macd_col].iloc[0]
-        current_signal = macd_df[signal_col].iloc[0]
-        current_hist = macd_df[hist_col].iloc[0]
+        current_macd = macd_df[macd_col].iloc[-1]
+        current_signal = macd_df[signal_col].iloc[-1]
+        current_hist = macd_df[hist_col].iloc[-1]
         
         # Get previous values for trend determination
-        prev_macd = macd_df[macd_col].iloc[1] if len(macd_df) > 1 else current_macd
-        prev_signal = macd_df[signal_col].iloc[1] if len(macd_df) > 1 else current_signal
-        prev_hist = macd_df[hist_col].iloc[1] if len(macd_df) > 1 else 0
+        prev_macd = macd_df[macd_col].iloc[-2] if len(macd_df) > 1 else current_macd
+        prev_signal = macd_df[signal_col].iloc[-2] if len(macd_df) > 1 else current_signal
+        prev_hist = macd_df[hist_col].iloc[-2] if len(macd_df) > 1 else 0
         
         # Get more history for trend strength
         hist_values = macd_df[hist_col].dropna().iloc[-20:] if len(macd_df) >= 20 else macd_df[hist_col].dropna()

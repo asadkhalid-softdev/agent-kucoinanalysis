@@ -312,9 +312,9 @@ class SymbolStorage:
                 self.logger.warning("No symbols fetched from KuCoin, keeping existing symbols")
                 return False
             
-            symbols = [
-                "BTC-USDT"
-            ]
+            # symbols = [
+            #     "BTC-USDT"
+            # ]
             
             # Save the symbols
             symbols = sorted(symbols)
