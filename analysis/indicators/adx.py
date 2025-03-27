@@ -29,8 +29,6 @@ class AverageDirectionalIndex:
             dict: Signal information
         """
         adx_df = self.calculate(df)
-        # print(df)
-        # print(adx_df)
         
         # Get column names from pandas-ta output
         adx_col = f"ADX_{self.length}"
@@ -48,25 +46,6 @@ class AverageDirectionalIndex:
             trend_strength = "moderate"
         else:
             trend_strength = "strong"
-
-        # Determine signal for trend following
-        if current_adx > self.adx_threshold:
-            if current_pdi > current_ndi:
-                # Strong uptrend - follow the trend up
-                signal = "bullish"
-                # Strength increases with both ADX and the difference between +DI and -DI
-                strength = min(1.0, (current_adx / 100) * (current_pdi - current_ndi) / 20)
-            elif current_ndi > current_pdi:
-                # Strong downtrend - follow the trend down
-                signal = "bearish"
-                strength = min(1.0, (current_adx / 100) * (current_ndi - current_pdi) / 20)
-            else:
-                signal = "neutral"
-                strength = 0.0
-        else:
-            # ADX below threshold indicates weak trend - not ideal for trend following
-            signal = "neutral"
-            strength = 0.0
             
         return {
             "indicator": self.name,
@@ -75,7 +54,5 @@ class AverageDirectionalIndex:
                 "plus_di": current_pdi,
                 "minus_di": current_ndi,
                 "trend_strength": trend_strength
-            },
-            "signal": signal,
-            "strength": strength
+            }
         }

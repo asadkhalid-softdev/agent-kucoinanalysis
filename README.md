@@ -1,446 +1,188 @@
-# KuCoin Spot Analysis Bot (TREND FOLLOWING PRINCIPAL)
+# KuCoin Analysis Bot
 
-An AI-powered technical analysis bot for cryptocurrency markets using the KuCoin API. This bot analyzes popular technical indicators to provide trading insights without executing trades.
+A sophisticated cryptocurrency analysis bot that provides real-time technical analysis and trading signals using the KuCoin API. The bot combines multiple technical indicators and strategies to generate comprehensive market insights.
 
 ## Features
 
-- Real-time technical analysis of cryptocurrency markets
-- Sentiment analysis combining multiple technical indicators
-- RESTful API for easy integration with other systems
-- Configurable analysis parameters and indicators
-- Performance monitoring and optimization
+- **Multi-Strategy Analysis**
+  - Momentum Strategy
+  - Mean Reversion Strategy
+  - Breakout Strategy
+  - Configurable strategy selection via environment variables
 
-## Getting Started
+- **Technical Indicators**
+  - RSI (Relative Strength Index)
+  - MACD (Moving Average Convergence Divergence)
+  - Bollinger Bands
+  - Moving Averages (SMA, EMA)
+  - Stochastic Oscillator
+  - ADX (Average Directional Index)
+  - Fibonacci Retracement
+  - OBV (On-Balance Volume)
+  - Candlestick Patterns
+    - Doji (neutral)
+    - Hammer (bullish)
+    - Shooting Star (bearish)
+    - Bullish/Bearish Engulfing
 
-### Prerequisites
+- **Multi-Timeframe Analysis**
+  - Support for multiple timeframes (1min to 1week)
+  - Configurable primary and secondary timeframes
+  - Adaptive data collection based on timeframe
+
+- **Real-time Monitoring**
+  - Live dashboard for monitoring analysis results
+  - Performance metrics and system status
+  - Historical data visualization
+
+- **Telegram Integration**
+  - Real-time trading signals via Telegram
+  - Configurable notification filters
+  - Customizable alert conditions
+
+## Prerequisites
 
 - Python 3.10 or higher
-- KuCoin API credentials (optional for public endpoints)
+- KuCoin API credentials (for enhanced functionality)
 - Internet connection
 
-### Installation
+## Installation
 
 1. Clone the repository:
-
-```
-git clone https://github.com/asadkhalid-softdev/aiagent-kucoinanalysis.git
-cd aiagent-kucoinanalysis
-```
-
-
-2. Create a virtual environment:
-
-```
-python -m venv venv
-source venv/bin/activate # On Windows: venv\Scripts\activate
+```bash
+git clone https://github.com/yourusername/agent-kucoinanalysis.git
+cd agent-kucoinanalysis
 ```
 
+2. Create and activate a virtual environment using uv:
+```bash
+uv venv --python 3.10
+.venv\Scripts\activate  # On Windows
+source .venv/bin/activate  # On Unix/MacOS
+```
 
 3. Install dependencies:
-
-```
+```bash
 pip install -r requirements.txt
 ```
 
+4. Configure environment variables:
+Create a `.env` file with the following settings:
 
-4. Create a `.env` file with your configuration:
-
-```
+```env
+# KuCoin API Credentials
 KUCOIN_API_KEY=your_api_key
 KUCOIN_API_SECRET=your_api_secret
 KUCOIN_API_PASSPHRASE=your_api_passphrase
 
+# API Authentication
 API_USERNAME=admin
-API_PASSWORD=secure_password
+API_PASSWORD=your_password
 SECRET_KEY=your_jwt_secret_key
+
+# Telegram Settings
+TELEGRAM_BOT_TOKEN=your_bot_token
+TELEGRAM_CHAT_ID=your_chat_id
+TELEGRAM_NOTIFICATIONS_ENABLED=true
+TELEGRAM_NOTIFY_ON_VOLUME=0
+TELEGRAM_NOTIFY_ON_RSI_BUY=70
+
+# Strategy-specific filters
+MOMENTUM_SCORE_THRESHOLD=0.5
+MOMENTUM_CONFIDENCE_THRESHOLD=0.6
+MEAN_REVERSION_SCORE_THRESHOLD=0.5
+MEAN_REVERSION_CONFIDENCE_THRESHOLD=0.6
+BREAKOUT_SCORE_THRESHOLD=0.5
+BREAKOUT_CONFIDENCE_THRESHOLD=0.6
+
+# Strategy Filters
+ENABLE_MOMENTUM_STRATEGY=true
+ENABLE_MEAN_REVERSION_STRATEGY=true
+ENABLE_BREAKOUT_STRATEGY=true
 ```
 
+## Usage
 
-5. Start the application:
-
-```
+1. Start the application:
+```bash
 python main.py
 ```
 
+2. Access the interfaces:
+- API Documentation: http://localhost:8000/docs
+- Monitoring Dashboard: http://localhost:8050
 
-## API Documentation
+## Configuration
 
-The bot provides a RESTful API for managing symbols and accessing analysis results.
+### Analysis Settings
+Configure analysis parameters in `config/user_config.json`:
+```json
+{
+  "analysis": {
+    "interval": 1,
+    "main_timeframe": "15min",
+    "timeframes": ["15min"],
+    "indicators": [
+      "RSI", "MACD", "BBANDS", "SMA", "EMA", 
+      "STOCH", "ADX", "FIBONACCI", "OBV", "CANDLESTICK"
+    ]
+  }
+}
+```
 
-api: http://localhost:8000/docs#
+### Strategy Settings
+Enable/disable strategies and adjust thresholds in `.env`:
+```env
+ENABLE_MOMENTUM_STRATEGY=true
+MOMENTUM_SCORE_THRESHOLD=0.5
+MOMENTUM_CONFIDENCE_THRESHOLD=0.6
+```
 
-dashboard: http://localhost:8050/
+### Candlestick Pattern Analysis
+The bot includes sophisticated candlestick pattern analysis that:
+- Detects common patterns (Doji, Hammer, Shooting Star, Engulfing)
+- Provides pattern-specific signals and strengths
+- Integrates with multiple trading strategies:
+  - Momentum: 0.6 weight (confirms trend direction)
+  - Mean Reversion: 0.4 weight (helps identify potential reversals)
+  - Breakout: 0.5 weight (confirms breakout signals)
+
+## API Endpoints
 
 ### Authentication
-
-All API endpoints (except `/docs` and `/redoc`) require authentication using JWT tokens.
-
-To get a token:
-
+```
 POST /token
 Content-Type: application/x-www-form-urlencoded
-
-username=admin&password=secure_password
-
+username=admin&password=your_password
 ```
-Response:
-{
-"access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-"token_type": "bearer"
-}
-```
-
-
-Use this token in subsequent requests:
-
-GET /api/symbols
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-
 
 ### Symbol Management
-
-#### Get all tracked symbols
-
-GET /api/symbols
-
-```
-Response:
-[
-"BTC-USDT",
-"ETH-USDT",
-"SOL-USDT"
-]
-```
-
-
-#### Add a symbol
-
-POST /api/symbols
-Content-Type: application/json
-
-{
-"symbol": "BTC-USDT"
-}
-
-```
-Response:
-{
-"symbol": "BTC-USDT",
-"status": "added"
-}
-```
-
-
-#### Remove a symbol
-
-DELETE /api/symbols/BTC-USDT
-
-```
-Response:
-{
-"symbol": "BTC-USDT",
-"status": "removed"
-}
-```
-
-
-### Analysis Results
-
-#### Get analysis for all symbols
-
-GET /api/analysis
-
-```
-Response:
-[
-{
-"symbol": "BTC-USDT",
-"timestamp": "2023-07-15T14:30:00Z",
-"price": 29876.45,
-"sentiment": {
-"overall": "buy",
-"strength": "moderate",
-"confidence": 0.72,
-"score": 0.45
-},
-"analysis_summary": "BTC-USDT shows bullish momentum with RSI in neutral territory. Price is trading above key moving averages with positive MACD histogram."
-},
-{
-"symbol": "ETH-USDT",
-"timestamp": "2023-07-15T14:30:00Z",
-"price": 1876.23,
-"sentiment": {
-"overall": "neutral",
-"strength": "none",
-"confidence": 0.65,
-"score": 0.05
-},
-"analysis_summary": "ETH-USDT is consolidating in a range with mixed signals. RSI is neutral at 52.3 and price is near the middle Bollinger Band."
-}
-]
-```
-
-
-#### Get detailed analysis for a specific symbol
-
-GET /api/analysis/BTC-USDT
-
-```
-Response:
-{
-"symbol": "BTC-USDT",
-"timestamp": "2023-07-15T14:30:00Z",
-"price": 29876.45,
-"indicators": {
-"RSI_14": {
-"indicator": "RSI_14",
-"value": 58.34,
-"signal": "neutral",
-"strength": 0.0
-},
-"MACD_12_26_9": {
-"indicator": "MACD_12_26_9",
-"value": {
-"macd": 12.5,
-"signal": 9.8,
-"histogram": 2.7
-},
-"signal": "bullish",
-"strength": 0.54
-},
-"BBANDS_20_2": {
-"indicator": "BBANDS_20_2",
-"value": {
-"upper": 30120.45,
-"middle": 29850.30,
-"lower": 29580.15,
-"bandwidth": 0.018,
-"percent_b": 0.65
-},
-"signal": "neutral",
-"strength": 0.0
-}
-},
-"sentiment": {
-"overall": "buy",
-"strength": "moderate",
-"confidence": 0.72,
-"score": 0.45
-},
-"analysis_summary": "BTC-USDT shows bullish momentum with RSI in neutral territory. Price is trading above key moving averages with positive MACD histogram."
-}
-```
-
-
-#### Get sentiment summary for all symbols
-
-GET /api/analysis/sentiment
-
-```
-Response:
-{
-"BTC-USDT": {
-"overall": "buy",
-"strength": "moderate",
-"confidence": 0.72,
-"score": 0.45
-},
-"ETH-USDT": {
-"overall": "neutral",
-"strength": "none",
-"confidence": 0.65,
-"score": 0.05
-}
-}
-```
-
-
-### Configuration
-
-#### Get current configuration
-
-GET /api/config
-
-**`interval (in mins)`**
-
-```
-Response:
-{
-    "analysis": {
-      "interval": 1,
-      "main_timeframe": "1hour",
-      "timeframes": ["1hour", "1day"],
-      "indicators": [
-        "RSI", "MACD", "BBANDS", "SMA", "EMA", 
-        "OBV", "STOCH", "ADX", "FIBONACCI"
-      ]
-    },
-    "telegram": {
-      "telegram_notify_on_sentiment": ["strong buy", "moderate buy"],
-      "telegram_notify_on_confidence": 0.45,
-      "telegram_notifications_enabled": true
-    },
-    "display": {
-      "theme": "dark",
-      "decimal_places": 2,
-      "show_all_indicators": true
-    },
-    "notifications": {
-      "enabled": false,
-      "email": "",
-      "strong_signals_only": true
-    }
-  }
-```
-
-
-#### Update configuration
-
-PUT /api/config
-Content-Type: application/json
-
-```
-{
-    "analysis": {
-      "interval": 1,
-      "main_timeframe": "1hour",
-      "timeframes": ["1hour", "1day"],
-      "indicators": [
-        "RSI", "MACD", "BBANDS", "SMA", "EMA", 
-        "OBV", "STOCH", "ADX", "FIBONACCI"
-      ]
-    },
-    "display": {
-      "theme": "dark",
-      "decimal_places": 2,
-      "show_all_indicators": true
-    },
-    "notifications": {
-      "enabled": false,
-      "email": "",
-      "strong_signals_only": true
-    }
-  }
-  ```
-  
-
-```
-Response:
-{
-"status": "success",
-"message": "Configuration updated"
-}
-```
-
-
-#### Reset configuration to defaults
-
-POST /api/config/reset
-
-```
-Response:
-{
-"status": "success",
-"message": "Configuration reset to defaults"
-}
-```
-
-
-## For more details, see the [API Documentation](http://localhost:8000/docs) when the server is running.
-
-## Telegram Integration
-
-The KuCoin Spot Analysis Bot includes Telegram integration to send real-time notifications for significant trading signals and allow interaction with the bot through commands.
-
-### Setup Instructions
-
-1. **Create a Telegram Bot**:
-    - Open Telegram and search for "BotFather" (@BotFather)
-    - Start a chat and send the command `/newbot`
-    - Follow the prompts to name your bot and create a username
-    - Save the API token provided by BotFather
-2. **Configure Your Bot**:
-    - Add the following to your `.env` file:
-
-```
-TELEGRAM_BOT_TOKEN=your_bot_token_here
-TELEGRAM_CHAT_ID=your_chat_id_here
-```
-
-3. **Get Your Chat ID**:
-    - Run the utility script:
-
-```
-python -m utils.get_telegram_chat_id
-```
-
-    - Send a message to your bot in Telegram
-    - The script will display your chat ID
-    - Add this ID to your `.env` file:
-
-```
-TELEGRAM_CHAT_ID=your_chat_id_here
-```
-
-4. **Test the Integration**:
-    - Run the test script:
-
-```
-python -m utils.test_telegram
-```
-
-    - You should receive a test notification in Telegram
-
-### Notification Features
-
-The bot will automatically send you alerts when:
-
-- A symbol develops a strong buy or moderate buy signal
-- Any critical system errors occur
-
-Notifications include:
-
-- Current price
-- Sentiment strength and direction
-- Confidence level
-- Key indicator values
-- Analysis summary
-
-``` 
-🚨 GOATS-USDT Alert: MODERATE BUY
-
-💰 Current Price: $9.045e-05
-🎯 Sentiment: moderate buy
-🔍 Confidence: 0.76
-
-GOATS-USDT is trading at 9.045e-05 (0.16% change) Overall sentiment: moderate buy (confidence: 0.76) MACD shows bullish momentum
-
-Key Indicators:
-• RSI: 31.32
-• MACD Histogram: -4.171450619941169e-07
-• BB %B: 0.12
-
-Generated at 2025-03-17T02:42:31.721022
-```
-
-### Customizing Notifications
-
-You can customize which sentiment levels trigger notifications by modifying the `telegram_notify_on_sentiment` setting in your configuration `config\user_config.json`.
-
-
-### Security Considerations
-
-- Never share your bot token publicly
-- Regenerate your bot token if you suspect it has been compromised
-- Consider using a private Telegram group for notifications if multiple people need access
-
-
-### Troubleshooting
-
-If you're not receiving notifications:
-
-1. Ensure `telegram_notifications_enabled` in `config\user_config.json` is set to `true`
-2. Verify your bot token is correct
-3. Make sure you've sent at least one message to your bot
-4. Check that your chat ID is correctly configured
-5. Look for any errors in the application logs
+- `GET /api/symbols` - List all tracked symbols
+- `POST /api/symbols` - Add a new symbol
+- `DELETE /api/symbols/{symbol}` - Remove a symbol
+
+### Analysis
+- `GET /api/analysis` - Get analysis for all symbols
+- `GET /api/analysis/{symbol}` - Get detailed analysis for a specific symbol
+- `GET /api/analysis/sentiment` - Get sentiment summary for all symbols
+
+## Monitoring Dashboard
+
+The dashboard provides:
+- Real-time analysis results
+- System performance metrics
+- Historical data visualization
+- Strategy performance tracking
+- Candlestick pattern visualization
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.

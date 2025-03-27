@@ -33,11 +33,14 @@ class Backtester:
         Returns:
             dict: Backtest results including accuracy metrics
         """
+        self.logger.info(f"Starting backtest for {symbol} with {lookback_periods} lookback and {forward_periods} forward periods")
+        
         try:
             # Convert to DataFrame for easier manipulation
             df = self.analysis_engine._prepare_dataframe(klines_data)
             
             if len(df) < lookback_periods + forward_periods:
+                self.logger.warning(f"Insufficient data for backtest: need {lookback_periods + forward_periods}, got {len(df)}")
                 return {
                     "symbol": symbol,
                     "error": "Insufficient data for backtest",
@@ -52,80 +55,66 @@ class Backtester:
                 # Get data window
                 window = df.iloc[i:i+lookback_periods].copy()
                 
-                # Run analysis on window
-                analysis = self.analysis_engine.analyze_symbol(symbol, window.values.tolist())
-                
-                # Get forward window for validation
-                forward_window = df.iloc[i+lookback_periods:i+lookback_periods+forward_periods]
-                
-                # Calculate price change in forward window
-                start_price = forward_window['close'].iloc[0]
-                end_price = forward_window['close'].iloc[-1]
-                price_change_pct = (end_price - start_price) / start_price * 100
-                
-                # Determine if analysis was correct
-                sentiment = analysis['sentiment']['overall']
-                strength = analysis['sentiment']['strength']
-                
-                if sentiment == 'buy' and price_change_pct > 0:
-                    correct = True
-                elif sentiment == 'sell' and price_change_pct < 0:
-                    correct = True
-                elif sentiment == 'neutral' and abs(price_change_pct) < 1.0:  # 1% threshold for neutral
-                    correct = True
-                else:
-                    correct = False
-                
-                # Store result
-                results.append({
-                    'timestamp': window['timestamp'].iloc[-1],
-                    'sentiment': sentiment,
-                    'strength': strength,
-                    'price_change_pct': price_change_pct,
-                    'correct': correct
-                })
+                try:
+                    # Run analysis on window
+                    analysis = self.analysis_engine.analyze_symbol(symbol, window.values.tolist())
+                    
+                    # Get forward window for validation
+                    forward_window = df.iloc[i+lookback_periods:i+lookback_periods+forward_periods]
+                    
+                    # Calculate price change in forward window
+                    start_price = forward_window['close'].iloc[0]
+                    end_price = forward_window['close'].iloc[-1]
+                    price_change_pct = (end_price - start_price) / start_price * 100
+                    
+                    # Determine if analysis was correct
+                    sentiment = analysis['sentiment']['overall']
+                    strength = analysis['sentiment']['strength']
+                    
+                    if sentiment == 'buy' and price_change_pct > 0:
+                        correct = True
+                    elif sentiment == 'sell' and price_change_pct < 0:
+                        correct = True
+                    elif sentiment == 'neutral' and abs(price_change_pct) < 1.0:  # 1% threshold for neutral
+                        correct = True
+                    else:
+                        correct = False
+                    
+                    results.append({
+                        'timestamp': window.index[-1],
+                        'sentiment': sentiment,
+                        'strength': strength,
+                        'price_change_pct': price_change_pct,
+                        'correct': correct
+                    })
+                except Exception as e:
+                    self.logger.error(f"Error analyzing window {i}: {str(e)}", exc_info=True)
+                    continue
             
-            # Calculate accuracy metrics
-            results_df = pd.DataFrame(results)
-            
-            if len(results_df) == 0:
+            if not results:
+                self.logger.warning("No valid results from backtest")
                 return {
                     "symbol": symbol,
-                    "error": "No valid backtest periods",
+                    "error": "No valid results from backtest",
                     "accuracy": 0.0
                 }
             
-            overall_accuracy = results_df['correct'].mean()
+            # Calculate accuracy
+            correct_predictions = sum(1 for r in results if r['correct'])
+            accuracy = correct_predictions / len(results)
             
-            # Calculate accuracy by sentiment
-            sentiment_accuracy = {}
-            for sentiment in results_df['sentiment'].unique():
-                sentiment_df = results_df[results_df['sentiment'] == sentiment]
-                sentiment_accuracy[sentiment] = {
-                    'count': len(sentiment_df),
-                    'accuracy': sentiment_df['correct'].mean() if len(sentiment_df) > 0 else 0.0
-                }
-            
-            # Calculate accuracy by strength
-            strength_accuracy = {}
-            for strength in results_df['strength'].unique():
-                strength_df = results_df[results_df['strength'] == strength]
-                strength_accuracy[strength] = {
-                    'count': len(strength_df),
-                    'accuracy': strength_df['correct'].mean() if len(strength_df) > 0 else 0.0
-                }
+            self.logger.info(f"Backtest completed for {symbol}: {accuracy:.2%} accuracy ({correct_predictions}/{len(results)} correct)")
             
             return {
                 "symbol": symbol,
-                "periods_tested": len(results_df),
-                "overall_accuracy": overall_accuracy,
-                "sentiment_accuracy": sentiment_accuracy,
-                "strength_accuracy": strength_accuracy,
-                "detailed_results": results
+                "accuracy": accuracy,
+                "total_predictions": len(results),
+                "correct_predictions": correct_predictions,
+                "results": results
             }
             
         except Exception as e:
-            self.logger.error(f"Error in backtest for {symbol}: {str(e)}", exc_info=True)
+            self.logger.error(f"Error running backtest for {symbol}: {str(e)}", exc_info=True)
             return {
                 "symbol": symbol,
                 "error": str(e),
@@ -147,22 +136,16 @@ class Backtester:
             return f"Backtest Error: {backtest_results['error']}"
         
         symbol = backtest_results['symbol']
-        overall_accuracy = backtest_results['overall_accuracy']
-        periods_tested = backtest_results['periods_tested']
+        accuracy = backtest_results['accuracy']
+        total_predictions = backtest_results['total_predictions']
+        correct_predictions = backtest_results['correct_predictions']
         
         report = [
             f"Backtest Report for {symbol}",
-            f"Periods Tested: {periods_tested}",
-            f"Overall Accuracy: {overall_accuracy:.2%}",
-            "\nAccuracy by Sentiment:",
+            f"Total Predictions: {total_predictions}",
+            f"Correct Predictions: {correct_predictions}",
+            f"Accuracy: {accuracy:.2%}",
         ]
-        
-        for sentiment, data in backtest_results['sentiment_accuracy'].items():
-            report.append(f"  {sentiment}: {data['accuracy']:.2%} ({data['count']} signals)")
-        
-        report.append("\nAccuracy by Strength:")
-        for strength, data in backtest_results['strength_accuracy'].items():
-            report.append(f"  {strength}: {data['accuracy']:.2%} ({data['count']} signals)")
         
         report_text = "\n".join(report)
         
@@ -180,10 +163,10 @@ class Backtester:
             backtest_results (dict): Results from run_backtest
             output_file (str, optional): Path to save the plot
         """
-        if 'error' in backtest_results or 'detailed_results' not in backtest_results:
+        if 'error' in backtest_results or 'results' not in backtest_results:
             return
         
-        results = backtest_results['detailed_results']
+        results = backtest_results['results']
         results_df = pd.DataFrame(results)
         
         if len(results_df) == 0:
@@ -228,7 +211,7 @@ class Backtester:
         fig.autofmt_xdate()
         
         # Add accuracy text
-        accuracy_text = f"Overall Accuracy: {backtest_results['overall_accuracy']:.2%}"
+        accuracy_text = f"Accuracy: {backtest_results['accuracy']:.2%}"
         fig.text(0.02, 0.02, accuracy_text, fontsize=12)
         
         plt.tight_layout()

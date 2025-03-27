@@ -7,6 +7,10 @@ import os
 import threading
 import json
 import numpy as np
+import signal
+import sys
+import subprocess
+from pathlib import Path
 
 import platform
 
@@ -20,7 +24,6 @@ if system.lower() == "windows":
 from api.routes import app
 from data.storage import SymbolStorage
 from analysis.engine import AnalysisEngine
-from analysis.multi_timeframe import MultiTimeframeAnalyzer
 from data.kucoin_client import KuCoinClient
 from config.settings import Settings
 from utils.logger import Logger
@@ -32,6 +35,11 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 from config.user_config import UserConfig
 
+# Global variables for cleanup
+scheduler = None
+dashboard_process = None
+shutdown_event = threading.Event()
+
 class NumpyEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, np.integer):
@@ -40,7 +48,54 @@ class NumpyEncoder(json.JSONEncoder):
             return float(obj)
         elif isinstance(obj, np.ndarray):
             return obj.tolist()
+        elif isinstance(obj, np.bool_):
+            return bool(obj)
+        elif isinstance(obj, np.datetime64):
+            return obj.astype(str)
+        elif isinstance(obj, np.timedelta64):
+            return obj.astype(str)
         return super(NumpyEncoder, self).default(obj)
+
+def signal_handler(signum, frame):
+    """Handle shutdown signals"""
+    logger.info(f"Received signal {signum}. Starting graceful shutdown...")
+    shutdown_event.set()
+    # Force cleanup after 5 seconds if not completed
+    threading.Timer(5.0, force_shutdown).start()
+
+def force_shutdown():
+    """Force shutdown if graceful shutdown takes too long"""
+    if not shutdown_event.is_set():
+        logger.warning("Force shutdown initiated")
+        os._exit(1)
+
+def cleanup():
+    """Cleanup resources before shutdown"""
+    global scheduler, dashboard_process
+    
+    logger.info("Cleaning up resources...")
+    
+    # Shutdown scheduler
+    if scheduler:
+        logger.info("Shutting down scheduler...")
+        scheduler.shutdown(wait=False)
+    
+    # Terminate dashboard process
+    if dashboard_process:
+        logger.info("Shutting down dashboard...")
+        dashboard_process.terminate()
+        try:
+            dashboard_process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            dashboard_process.kill()
+    
+    # Stop the FastAPI server
+    try:
+        uvicorn.server.shutdown()
+    except Exception as e:
+        logger.error(f"Error shutting down FastAPI server: {str(e)}")
+    
+    logger.info("Cleanup completed")
 
 # Initialize user config
 user_config = UserConfig()
@@ -61,7 +116,6 @@ kucoin_client = KuCoinClient(
     api_passphrase=settings.kucoin_api_passphrase
 )
 analysis_engine = AnalysisEngine(config=user_config.get_config())
-analysis_multiframe_engine = MultiTimeframeAnalyzer(analysis_engine)
 
 # Initialize symbols from KuCoin instead of using symbols.json
 symbol_storage.initialize_symbols_from_kucoin(kucoin_client)
@@ -215,56 +269,35 @@ def analyze_symbol(symbol):
             logger.error(f"Error getting current price for {symbol}: {str(e)}", exc_info=True)
             current_price = 0
             
-        # Analyze symbol using available data for primary timeframe
         analysis = analysis_engine.analyze_symbol(symbol, timeframe_data[primary_tf])
+        # Analyze symbol using available data for primary timeframe
         # with open('individual_analysis_summary.json', 'w') as file:
         #     json.dump(analysis, file, indent=4, cls=NumpyEncoder)
-            
-        analysis_multi = analysis_multiframe_engine.analyze(symbol, timeframe_data)
-        # with open('multi_analysis_summary.json', 'w') as file:
-        #     json.dump(analysis_multi, file, indent=4, cls=NumpyEncoder)
-
-        if len(timeframe_data) > 1:
-            analysis = analysis_multi.copy()
         
         # Add current price if not present
         if "price" not in analysis and current_price > 0:
             analysis["price"] = current_price
             
-        # Add multi-timeframe analysis if multiple timeframes available
-        if len(timeframe_data) > 1 and hasattr(analysis_engine, 'multi_timeframe_analysis'):
-            try:
-                multi_tf_analysis = analysis_engine.multi_timeframe_analysis(symbol, timeframe_data)
-                analysis["multi_timeframe"] = multi_tf_analysis
-            except Exception as e:
-                logger.error(f"Error in multi-timeframe analysis for {symbol}: {str(e)}", exc_info=True)
-        
         # Store analysis result
         symbol_storage.store_analysis(symbol, analysis)
         logger.info(f"Analysis completed for {symbol} using {len(timeframe_data)} timeframes")
         
         # Check if we should send a Telegram notification
         if telegram_notifier and "sentiment" in analysis and settings.telegram_notifications_enabled:
-            sentiment = analysis["sentiment"]
-            confidence = sentiment.get("confidence", 0.0)
-            score = sentiment.get("score", 0.0)
-            sentiment_key = f"{sentiment.get('strength', 'none')} {sentiment.get('overall', 'neutral')}"
+            strategy = analysis.get("sentiment", {}).get("strategy", {})
             volume = analysis.get("volume", 0.0)
-            potential_profit_pct = analysis.get("indicators", {}).get("FIBONACCI", {}).get("value", {}).get("potential_profit_pct", settings.telegram_notify_on_profit_buy)
-            risk_reward_ratio = analysis.get("indicators", {}).get("FIBONACCI", {}).get("value", {}).get("risk_reward_ratio", settings.telegram_notify_on_plr)
-            rsi = analysis.get("indicators", {}).get("RSI", {}).get("value", settings.telegram_notify_on_rsi_buy)
-            
-            # Send notification for strong buy signals
-            if sentiment_key.lower() in settings.telegram_notify_on_sentiment and \
-            confidence >= settings.telegram_notify_on_confidence and \
-            score >= settings.score_low and \
-            score <= settings.score_high and \
+            rsi = analysis.get("indicators", {}).get("RSI", {}).get("value", {}).get("rsi", settings.telegram_notify_on_rsi_buy)
+
+            # Check each strategy for buy signals
+            momentum_signal = settings.enable_momentum_strategy and strategy["momentum"]["score"] >= settings.momentum_score_threshold and strategy["momentum"]["confidence"] >= settings.momentum_confidence_threshold
+            mean_reversion_signal = settings.enable_mean_reversion_strategy and strategy["mean_reversion"]["score"] >= settings.mean_reversion_score_threshold and strategy["mean_reversion"]["confidence"] >= settings.mean_reversion_confidence_threshold
+            breakout_signal = settings.enable_breakout_strategy and strategy["breakout"]["score"] >= settings.breakout_score_threshold and strategy["breakout"]["confidence"] >= settings.breakout_confidence_threshold
+
+            # Send notification if any enabled strategy shows a buy signal and other conditions are met
+            if (momentum_signal or mean_reversion_signal or breakout_signal) and \
             volume >= settings.telegram_notify_on_volume and \
-            risk_reward_ratio >= settings.telegram_notify_on_plr and \
-            rsi <= settings.telegram_notify_on_rsi_buy and \
-            potential_profit_pct >= settings.telegram_notify_on_profit_buy: 
-                logger.info(f"Sending Telegram notification for {symbol}: {sentiment_key}")
-                # The notifier will now check internally if the notification should be sent
+            rsi <= settings.telegram_notify_on_rsi_buy:
+                logger.info(f"Sending Telegram notification for {symbol}: Strategy signal detected")
                 telegram_notifier.send_analysis_alert(symbol, analysis)
         
     except Exception as e:
@@ -349,14 +382,39 @@ def start_scheduler():
     return scheduler
 
 def start_dashboard():
-    """Start the monitoring dashboard in a separate thread"""
-    dashboard_thread = threading.Thread(
-        target=launch_dashboard,
-        kwargs={"port": 8050, "open_browser": False},
-        daemon=True
-    )
-    dashboard_thread.start()
-    logger.info("Monitoring dashboard started on port 8050")
+    """Start the monitoring dashboard in a separate process"""
+    global dashboard_process
+    try:
+        # Get the path to the monitoring dashboard script
+        dashboard_path = Path(__file__).parent / "utils" / "monitoring_dashboard.py"
+        
+        if not dashboard_path.exists():
+            logger.error(f"Dashboard script not found at {dashboard_path}", exc_info=True)
+            return False
+        
+        # Launch the dashboard in a separate process
+        logger.info(f"Launching monitoring dashboard on port 8050")
+        dashboard_process = subprocess.Popen(
+            [sys.executable, str(dashboard_path)],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+        
+        # Wait a moment for the dashboard to start
+        time.sleep(3)
+        
+        # Check if process is still running
+        if dashboard_process.poll() is not None:
+            stdout, stderr = dashboard_process.communicate()
+            logger.error(f"Dashboard failed to start: {stderr.decode()}", exc_info=True)
+            return False
+        
+        logger.info("Dashboard launched successfully")
+        return True
+    
+    except Exception as e:
+        logger.error(f"Error launching dashboard: {str(e)}", exc_info=True)
+        return False
 
 # Create a function to run initial analysis in background
 def run_initial_analysis():
@@ -369,6 +427,10 @@ def run_initial_analysis():
 
 if __name__ == "__main__":
     try:
+        # Set up signal handlers
+        signal.signal(signal.SIGINT, signal_handler)
+        signal.signal(signal.SIGTERM, signal_handler)
+        
         # Create required directories
         os.makedirs("logs", exist_ok=True)
         os.makedirs("data/storage", exist_ok=True)
@@ -379,12 +441,21 @@ if __name__ == "__main__":
         # Start the background scheduler
         scheduler = start_scheduler()
         
-        # Start the FastAPI server
-        logger.info("Starting API server")
-        uvicorn.run(app, host="0.0.0.0", port=8000)
+        # Start the FastAPI server in a separate thread
+        server_thread = threading.Thread(
+            target=lambda: uvicorn.run(app, host="0.0.0.0", port=8000),
+            daemon=True
+        )
+        server_thread.start()
+        
+        logger.info("Application started successfully")
+        
+        # Wait for shutdown signal
+        shutdown_event.wait()
+        
     except Exception as e:
         logger.error(f"Error starting application: {str(e)}", exc_info=True)
-    except KeyboardInterrupt:
-        logger.info("Shutting down application")
     finally:
-        scheduler.shutdown(wait=False)
+        cleanup()
+        logger.info("Application shutdown complete")
+        os._exit(0)  # Use os._exit instead of sys.exit to ensure immediate termination

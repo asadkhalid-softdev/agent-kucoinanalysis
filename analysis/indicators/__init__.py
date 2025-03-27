@@ -6,3 +6,4 @@ from analysis.indicators.volume import OnBalanceVolume
 from analysis.indicators.stochastic import StochasticOscillator
 from analysis.indicators.adx import AverageDirectionalIndex
 from analysis.indicators.fibonacci import FibonacciRetracement
+from analysis.indicators.candlestick import CandlestickPattern

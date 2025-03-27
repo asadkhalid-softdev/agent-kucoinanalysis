@@ -13,6 +13,12 @@ class NumpyEncoder(json.JSONEncoder):
             return float(obj)
         elif isinstance(obj, np.ndarray):
             return obj.tolist()
+        elif isinstance(obj, np.bool_):
+            return bool(obj)
+        elif isinstance(obj, np.datetime64):
+            return obj.astype(str)
+        elif isinstance(obj, np.timedelta64):
+            return obj.astype(str)
         return super(NumpyEncoder, self).default(obj)
 
 class SymbolStorage:
@@ -312,9 +318,9 @@ class SymbolStorage:
                 self.logger.warning("No symbols fetched from KuCoin, keeping existing symbols")
                 return False
             
-            # symbols = [
-            #     "BTC-USDT"
-            # ]
+            symbols = [
+                "ZEND-USDT"
+            ]
             
             # Save the symbols
             symbols = sorted(symbols)

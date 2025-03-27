@@ -1,22 +1,12 @@
 {
   "analysis": {
     "interval": 1,
-    "main_timeframe": "1day",
-    "timeframes": ["1day"],
+    "main_timeframe": "15min",
+    "timeframes": ["15min"],
     "indicators": [
       "RSI", "MACD", "BBANDS", "SMA", "EMA", 
-      "STOCH", "ADX", "FIBONACCI"
+      "STOCH", "ADX", "FIBONACCI", "OBV", "CANDLESTICK"
     ]
-  },
-  "telegram": {
-    "telegram_notifications_enabled": true,
-    "telegram_notify_on_sentiment": ["moderate buy"],
-    "telegram_notify_on_confidence": 0.7,
-    "telegram_notify_on_score": "0.4_0.6",
-    "telegram_notify_on_volume": 0,
-    "telegram_notify_on_plr": 0,
-    "telegram_notify_on_rsi_buy": 70,
-    "telegram_notify_on_profit_buy": 0
   },
   "display": {
     "theme": "dark",
@@ -27,5 +17,19 @@
     "enabled": false,
     "email": "",
     "strong_signals_only": true
+  },
+  "strategy": {
+    "momentum": {
+      "score_threshold": 0.5,
+      "confidence_threshold": 0.6
+    },
+    "mean_reversion": {
+      "score_threshold": 0.5,
+      "confidence_threshold": 0.6
+    },
+    "breakout": {
+      "score_threshold": 0.5,
+      "confidence_threshold": 0.6
+    }
   }
 }

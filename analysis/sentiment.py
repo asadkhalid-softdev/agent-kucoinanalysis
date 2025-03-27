@@ -1,5 +1,6 @@
 import numpy as np
 from collections import defaultdict
+import logging
 
 class SentimentAnalyzer:
     """
@@ -33,7 +34,7 @@ class SentimentAnalyzer:
     
     def __init__(self):
         """Initialize the sentiment analyzer."""
-        pass
+        self.logger = logging.getLogger(__name__)
     
     def _get_base_indicator_type(self, indicator_name):
         """Extract the base indicator type from the full indicator name."""
@@ -44,78 +45,217 @@ class SentimentAnalyzer:
         """Convert string signal to numerical value."""
         return self.SIGNAL_WEIGHTS.get(signal, 0.0)
     
-    def analyze(self, indicator_signals, df):
+    def analyze(self, indicator_signals):
         """
-        Analyze multiple indicator signals to determine overall sentiment.
+        Analyze multiple indicator signals to determine overall sentiment for different strategies.
         
         Args:
             indicator_signals (list): List of dictionaries containing indicator signals
+            df (pd.DataFrame): DataFrame with OHLCV price data
             
         Returns:
-            dict: Overall sentiment analysis
+            dict: Strategy-specific sentiment analysis
         """
         if not indicator_signals:
+            self.logger.warning("No indicator signals provided for sentiment analysis")
             return {
-                "overall": "neutral",
-                "strength": "none",
-                "confidence": 0.0,
-                "score": 0.0,
-                "volume": 0.0
+                "volume": 0.0,
+                "price": 0.0,
+                "strategy": {
+                    "momentum": {"score": 0.0, "confidence": 0.0},
+                    "mean_reversion": {"score": 0.0, "confidence": 0.0},
+                    "breakout": {"score": 0.0, "confidence": 0.0}
+                }
             }
         
-        # Group signals by indicator type to avoid overweighting multiple instances
+        self.logger.info(f"Starting sentiment analysis with {len(indicator_signals)} indicators")
+        
+        # Group signals by indicator type
         indicator_groups = defaultdict(list)
         for signal in indicator_signals:
             base_type = self._get_base_indicator_type(signal["indicator"])
             indicator_groups[base_type].append(signal)
         
-        # Calculate weighted sentiment score for each indicator type
-        type_scores = []
-        total_weight = 0
+        self.logger.debug(f"Grouped indicators: {list(indicator_groups.keys())}")
+        
+        # Strategy-specific weights for indicators
+        MOMENTUM_WEIGHTS = {
+            "MACD": 1.5,      # Primary momentum indicator
+            "RSI": 1.2,       # Momentum confirmation
+            "STOCH": 1.0,     # Momentum confirmation
+            "ADX": 0.8,       # Trend strength
+            "OBV": 0.7,       # Volume confirmation
+            "CANDLESTICK": 0.6 # Candlestick pattern confirmation
+        }
+        
+        MEAN_REVERSION_WEIGHTS = {
+            "BBANDS": 1.5,    # Primary mean reversion indicator
+            "RSI": 1.2,       # Overbought/oversold levels
+            "STOCH": 1.0,     # Overbought/oversold confirmation
+            "FIBONACCI": 0.8, # Support/resistance levels
+            "ADX": 0.5,       # Trend strength (lower weight for mean reversion)
+            "CANDLESTICK": 0.4 # Candlestick pattern confirmation
+        }
+        
+        BREAKOUT_WEIGHTS = {
+            "BBANDS": 1.3,    # Volatility and breakout levels
+            "OBV": 1.2,       # Volume confirmation
+            "ADX": 1.0,       # Trend strength
+            "MACD": 0.8,      # Momentum confirmation
+            "RSI": 0.7,       # Momentum confirmation
+            "CANDLESTICK": 0.5 # Candlestick pattern confirmation
+        }
+        
+        # Calculate scores for each strategy
+        momentum_scores = []
+        mean_reversion_scores = []
+        breakout_scores = []
         
         for indicator_type, signals in indicator_groups.items():
-            # Average the signals of the same type
-            type_signal_values = [
-                self._normalize_signal(s["signal"]) * s["strength"] 
-                for s in signals
-            ]
-            avg_signal = sum(type_signal_values) / len(type_signal_values)
+            # Calculate momentum score
+            if indicator_type in MOMENTUM_WEIGHTS:
+                momentum_weight = MOMENTUM_WEIGHTS[indicator_type]
+                for signal in signals:
+                    value = signal["value"]
+                    if indicator_type == "MACD":
+                        # MACD momentum score
+                        if value["macd_position"] == "above":
+                            score = 0.5 + (value["normalized_hist"] * 0.5) if value["hist_trend"] == "up" else 0.3
+                        else:
+                            score = -0.5 - (abs(value["normalized_hist"]) * 0.5) if value["hist_trend"] == "down" else -0.3
+                    elif indicator_type == "RSI":
+                        # RSI momentum score
+                        if value["rsi"] > 50:
+                            score = 0.5 + ((value["rsi"] - 50) / 50) * 0.5
+                        else:
+                            score = -0.5 - ((50 - value["rsi"]) / 50) * 0.5
+                    elif indicator_type == "STOCH":
+                        # Stochastic momentum score
+                        if value["k"] > 50:
+                            score = 0.5 + ((value["k"] - 50) / 50) * 0.5
+                        else:
+                            score = -0.5 - ((50 - value["k"]) / 50) * 0.5
+                    elif indicator_type == "CANDLESTICK":
+                        # Candlestick pattern momentum score
+                        if value["pattern"] in ["bullish_engulfing", "hammer"]:
+                            score = 0.8
+                        elif value["pattern"] in ["bearish_engulfing", "shooting_star"]:
+                            score = -0.8
+                        elif value["pattern"] == "doji":
+                            score = 0.0
+                        else:
+                            score = 0.0
+                    momentum_scores.append(score * momentum_weight)
             
-            # Get the weight for this indicator type
-            weight = self.INDICATOR_WEIGHTS.get(indicator_type, 0.5)
-            type_scores.append((avg_signal, weight))
-            total_weight += weight
+            # Calculate mean reversion score
+            if indicator_type in MEAN_REVERSION_WEIGHTS:
+                mean_reversion_weight = MEAN_REVERSION_WEIGHTS[indicator_type]
+                for signal in signals:
+                    value = signal["value"]
+                    if indicator_type == "BBANDS":
+                        # Bollinger Bands mean reversion score
+                        if value["percent_b"] > 0.8:
+                            score = -0.8  # Overbought
+                        elif value["percent_b"] < 0.2:
+                            score = 0.8   # Oversold
+                        else:
+                            score = 0.0
+                    elif indicator_type == "RSI":
+                        # RSI mean reversion score
+                        if value["rsi"] > value["overbought"]:
+                            score = -0.8
+                        elif value["rsi"] < value["oversold"]:
+                            score = 0.8
+                        else:
+                            score = 0.0
+                    elif indicator_type == "STOCH":
+                        # Stochastic mean reversion score
+                        if value["k"] > value["overbought"]:
+                            score = -0.8
+                        elif value["k"] < value["oversold"]:
+                            score = 0.8
+                        else:
+                            score = 0.0
+                    elif indicator_type == "CANDLESTICK":
+                        # Candlestick pattern mean reversion score
+                        if value["pattern"] in ["bullish_engulfing", "hammer"]:
+                            score = 0.6  # Potential reversal from downtrend
+                        elif value["pattern"] in ["bearish_engulfing", "shooting_star"]:
+                            score = -0.6  # Potential reversal from uptrend
+                        else:
+                            score = 0.0
+                    mean_reversion_scores.append(score * mean_reversion_weight)
+            
+            # Calculate breakout score
+            if indicator_type in BREAKOUT_WEIGHTS:
+                breakout_weight = BREAKOUT_WEIGHTS[indicator_type]
+                for signal in signals:
+                    value = signal["value"]
+                    if indicator_type == "BBANDS":
+                        # Bollinger Bands breakout score
+                        if value["bandwidth"] > 0.1:  # High volatility
+                            if value["percent_b"] > 0.8:
+                                score = -0.8  # Potential breakdown
+                            elif value["percent_b"] < 0.2:
+                                score = 0.8   # Potential breakout
+                            else:
+                                score = 0.0
+                        else:
+                            score = 0.0
+                    elif indicator_type == "OBV":
+                        # OBV breakout score
+                        if value["pattern"]["confirmation"]:
+                            score = 0.5 if value["short_term_trend"] == "up" else -0.5
+                        else:
+                            score = 0.0
+                    elif indicator_type == "ADX":
+                        # ADX breakout score
+                        if value["trend_strength"] == "strong":
+                            score = 0.8 if value["plus_di"] > value["minus_di"] else -0.8
+                        elif value["trend_strength"] == "moderate":
+                            score = 0.5 if value["plus_di"] > value["minus_di"] else -0.5
+                        else:
+                            score = 0.0
+                    elif indicator_type == "CANDLESTICK":
+                        # Candlestick pattern breakout score
+                        if value["pattern"] in ["bullish_engulfing", "hammer"]:
+                            score = 0.6  # Potential breakout to the upside
+                        elif value["pattern"] in ["bearish_engulfing", "shooting_star"]:
+                            score = -0.6  # Potential breakout to the downside
+                        else:
+                            score = 0.0
+                    breakout_scores.append(score * breakout_weight)
         
-            # Calculate weighted average sentiment score
-            weighted_score = sum(score * weight for score, weight in type_scores) / total_weight if total_weight > 0 else 0.0
-
-        # Revised sentiment thresholds for 15m trading
-        if weighted_score >= 0.65:        # Extreme bullish confirmation
-            overall = "buy"
-            strength = "strong"
-        elif weighted_score >= 0.45:      # Clear bullish momentum
-            overall = "buy" 
-            strength = "moderate"
-        elif weighted_score >= 0.25:      # Potential reversal signal
-            overall = "buy"
-            strength = "weak"
-        elif weighted_score <= -0.6:      # Extreme bearish (contrarian opportunity)
-            overall = "buy"
-            strength = "reversal"
-        else:
-            overall = "neutral" if weighted_score > -0.6 else "hold"
-            strength = "none"
+        # Calculate weighted average scores
+        weighted_score_momentum = sum(momentum_scores) / sum(MOMENTUM_WEIGHTS.values()) if momentum_scores else 0.0
+        weighted_score_mean_reversion = sum(mean_reversion_scores) / sum(MEAN_REVERSION_WEIGHTS.values()) if mean_reversion_scores else 0.0
+        weighted_score_breakout = sum(breakout_scores) / sum(BREAKOUT_WEIGHTS.values()) if breakout_scores else 0.0
         
-        # Calculate confidence based on agreement among indicators
-        signal_values = [self._normalize_signal(s["signal"]) for s in indicator_signals]
-        signal_std = np.std(signal_values)
-        confidence = max(0.0, min(1.0, 1.0 - signal_std))
+        # Calculate confidence for each strategy
+        confidence_momentum = max(0.0, min(1.0, 1.0 - np.std(momentum_scores))) if momentum_scores else 0.0
+        confidence_mean_reversion = max(0.0, min(1.0, 1.0 - np.std(mean_reversion_scores))) if mean_reversion_scores else 0.0
+        confidence_breakout = max(0.0, min(1.0, 1.0 - np.std(breakout_scores))) if breakout_scores else 0.0
         
-        return {
-            "overall": overall,
-            "strength": strength,
-            "confidence": round(confidence, 2),
-            "score": round(weighted_score, 2),
-            "volume": df['volume'].iloc[-1],
-            "price": df['close'].iloc[-1]
+        result = {
+            "strategy": {
+                "momentum": {
+                    "score": round(weighted_score_momentum, 2),
+                    "confidence": round(confidence_momentum, 2)
+                },
+                "mean_reversion": {
+                    "score": round(weighted_score_mean_reversion, 2),
+                    "confidence": round(confidence_mean_reversion, 2)
+                },
+                "breakout": {
+                    "score": round(weighted_score_breakout, 2),
+                    "confidence": round(confidence_breakout, 2)
+                }
+            }
         }
+        
+        self.logger.info(f"Sentiment analysis completed with scores: Momentum={result['strategy']['momentum']['score']:.2f}, "
+                        f"Mean Reversion={result['strategy']['mean_reversion']['score']:.2f}, "
+                        f"Breakout={result['strategy']['breakout']['score']:.2f}")
+        
+        return result
+        
