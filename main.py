@@ -278,17 +278,6 @@ def analyze_symbol(symbol):
         if "price" not in analysis and current_price > 0:
             analysis["price"] = current_price
             
-<<<<<<< HEAD
-        # Add multi-timeframe analysis if multiple timeframes available
-        if len(timeframe_data) > 1 and hasattr(analysis_engine, 'multi_timeframe_analysis'):
-            try:
-                multi_tf_analysis = analysis_engine.multi_timeframe_analysis(symbol, timeframe_data)
-                analysis["multi_timeframe"] = multi_tf_analysis
-            except Exception as e:
-                logger.error(f"Error in multi-timeframe analysis for {symbol}: {str(e)}", exc_info=True)
-        
-=======
->>>>>>> multi_strategy
         # Store analysis result
         symbol_storage.store_analysis(symbol, analysis)
         logger.info(f"Analysis completed for {symbol} using {len(timeframe_data)} timeframes")
@@ -466,11 +455,8 @@ if __name__ == "__main__":
         
     except Exception as e:
         logger.error(f"Error starting application: {str(e)}", exc_info=True)
-<<<<<<< HEAD
     except KeyboardInterrupt:
         logger.info("Shutting down application")
-=======
->>>>>>> multi_strategy
     finally:
         cleanup()
         logger.info("Application shutdown complete")
