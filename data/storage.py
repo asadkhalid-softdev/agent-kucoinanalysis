@@ -13,6 +13,12 @@ class NumpyEncoder(json.JSONEncoder):
             return float(obj)
         elif isinstance(obj, np.ndarray):
             return obj.tolist()
+        elif isinstance(obj, np.bool_):
+            return bool(obj)
+        elif isinstance(obj, np.datetime64):
+            return obj.astype(str)
+        elif isinstance(obj, np.timedelta64):
+            return obj.astype(str)
         return super(NumpyEncoder, self).default(obj)
 
 class SymbolStorage:
@@ -311,12 +317,22 @@ class SymbolStorage:
             if not symbols:
                 self.logger.warning("No symbols fetched from KuCoin, keeping existing symbols")
                 return False
-                        
-            # symbols = [
-            #     "BULL-USDT"
-            # ]
-
+            
+            symbols = [
+                "BTC-USDT",
+                "ETH-USDT",
+                "BNB-USDT",
+                "XRP-USDT",
+                "ADA-USDT",
+                "DOGE-USDT",
+                "MATIC-USDT",
+                "SOL-USDT",
+                "DOT-USDT",
+                "LINK-USDT"
+            ]
+            
             # Save the symbols
+            symbols = sorted(symbols)
             self._save_symbols(symbols)
             self.logger.info(f"Initialized {len(symbols)} symbols from KuCoin")
 

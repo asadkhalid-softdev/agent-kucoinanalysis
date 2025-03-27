@@ -13,6 +13,12 @@ class NumpyEncoder(json.JSONEncoder):
             return float(obj)
         elif isinstance(obj, np.ndarray):
             return obj.tolist()
+        elif isinstance(obj, np.bool_):
+            return bool(obj)
+        elif isinstance(obj, np.datetime64):
+            return obj.astype(str)
+        elif isinstance(obj, np.timedelta64):
+            return obj.astype(str)
         return super(NumpyEncoder, self).default(obj)
 
 class TelegramNotifier:
@@ -188,10 +194,10 @@ class TelegramNotifier:
             bool: True if message was sent successfully
         """
         try:
-            sentiment = analysis.get("sentiment", {})
+            strategy = analysis.get("sentiment", {}).get("strategy", {})
             
             # Check if we should send a notification
-            if not self.should_notify(symbol, sentiment):
+            if not self.should_notify(symbol, strategy):
                 return False
             
             overall = sentiment.get("overall", "neutral")
@@ -201,51 +207,39 @@ class TelegramNotifier:
             volume = analysis.get("volume", 0.0)
             price = analysis.get("price", 0.0)
             
-            message = f"<b>🚨 {symbol} Alert: {strength.upper()} {overall.upper()}</b>\n\n"
+            # Determine which strategies are showing buy signals
+            active_strategies = []
+            if strategy["momentum"]["score"] >= 0.5 and strategy["momentum"]["confidence"] >= 0.6:
+                active_strategies.append("Momentum")
+            if strategy["mean_reversion"]["score"] >= 0.5 and strategy["mean_reversion"]["confidence"] >= 0.6:
+                active_strategies.append("Mean Reversion")
+            if strategy["breakout"]["score"] >= 0.5 and strategy["breakout"]["confidence"] >= 0.6:
+                active_strategies.append("Breakout")
+            
+            message = f"<b>🚨 {symbol} Alert</b>\n\n"
             message += f"💰 Current Price: ${str(price)}\n"
             message += f"🎯 Sentiment: {strength} {overall}\n"
             message += f"🔍 Confidence: {confidence:.2f} ({score:.2f})\n"
             message += f"📊 Volume: {volume}\n\n"
             
-            # Add summary if available
-            # if "analysis_summary" in analysis:
-            #     message += f"<i>{analysis['analysis_summary']}</i>\n\n"
+            # Add strategy details
+            message += "<b>Strategy Analysis:</b>\n"
+            for strategy_name, data in strategy.items():
+                score = data["score"]
+                confidence = data["confidence"]
+                signal = "🟢" if score >= 0.5 else "🔴"
+                message += f"• {strategy_name.title().replace('_', ' ')}: {signal} Score: {score:.2f} (Confidence: {confidence:.2f})\n"
             
             # Add indicators if available
             if "indicators" in analysis and analysis["indicators"]:
-                message += "<b>Key Indicators:</b>\n"
+                message += "\n<b>Key Indicators:</b>\n"
                 for name, indicator in analysis["indicators"].items():
                     if name.startswith("RSI"):
-                        message += f"• RSI: {indicator['value']:.2f}\n"
-                    
-                    # elif name.startswith("MACD"):
-                    #     if isinstance(indicator['value'], dict):
-                    #         histogram = indicator['value'].get('histogram', 0)
-                    #         message += f"• MACD Histogram: {histogram}\n"
-                    # elif name.startswith("BBANDS"):
-                    #     if isinstance(indicator['value'], dict):
-                    #         percent_b = indicator['value'].get('percent_b', 0.5)
-                    #         message += f"• BB %B: {percent_b:.2f}\n"
-                    
+                        message += f"• RSI: {indicator['value']['rsi']:.2f}\n"
                     elif name.startswith("FIBONACCI"):
                         if isinstance(indicator['value'], dict):
-                            closest_level = indicator['value'].get('closest_level')
-                            closest_price = indicator['value'].get('closest_price')
-                            next_level_above = indicator['value'].get('next_level_above')
-                            next_level_above_price = indicator['value'].get('next_level_above_price')
-                            potential_profit_pct = indicator['value'].get('potential_profit_pct')
-                            next_level_below = indicator['value'].get('next_level_below')
-                            next_level_below_price = indicator['value'].get('next_level_below_price')
-                            potential_loss_pct = indicator['value'].get('potential_loss_pct')
-                            risk_reward_ratio = indicator['value'].get('risk_reward_ratio')
-                            
-                            fib_message = f"• Fibonacci: Near {closest_level} level (${closest_price})"
-                            fib_message += f"\n🤑  Target: {next_level_above} (${next_level_above_price}, +{potential_profit_pct:.2f}%)"
-                            fib_message += f"\n📉  Stop: {next_level_below} (${next_level_below_price}, -{potential_loss_pct:.2f}%)"
-                                
-                            if risk_reward_ratio is not None:
-                                fib_message += f"\n  Risk/Reward: {risk_reward_ratio:.2f}"
-                            
+                            closest_level = indicator['value'].get('current_level')
+                            fib_message = f"• Fibonacci: Near {closest_level} level"
                             message += fib_message + "\n"
 
             message += f"\n<i>Generated at {analysis.get('timestamp', 'N/A')}</i>"

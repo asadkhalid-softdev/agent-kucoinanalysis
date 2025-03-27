@@ -27,8 +27,6 @@ class IndicatorValue(BaseModel):
     """Model for indicator values"""
     indicator: str
     value: Any
-    signal: str
-    strength: float
 
 class AnalysisSummaryResponse(BaseModel):
     """Response model for analysis summary"""

@@ -102,6 +102,7 @@ class KuCoinClient:
         self.base_url = "https://api.kucoin.com"
         self.session = requests.Session()
         self.rate_limiter = KuCoinRateLimiter()
+        self.logger = logging.getLogger(__name__)
         
         # Encrypt passphrase if credentials are provided
         if api_passphrase and api_secret:
@@ -109,9 +110,10 @@ class KuCoinClient:
                 api_passphrase.encode('utf-8'), 
                 api_secret.encode('utf-8')
             )
+            self.logger.info("KuCoin API client initialized with credentials")
         else:
             self.encrypted_passphrase = ""
-            logging.warning("API credentials not provided. Only public endpoints available.")
+            self.logger.warning("API credentials not provided. Only public endpoints available.")
     
     def _sign(self, message, secret):
         """Sign a message using HMAC-SHA256 and encode with base64."""
@@ -148,10 +150,16 @@ class KuCoinClient:
         Returns:
             dict: Ticker data including price, volume, etc.
         """
+        self.logger.debug(f"Fetching ticker data for {symbol}")
         endpoint = "/api/v1/market/orderbook/level1"
         params = {"symbol": symbol}
         
         response = self._request("GET", f"{endpoint}?symbol={symbol}")
+        
+        if "error" in response:
+            self.logger.error(f"Error fetching ticker for {symbol}: {response['error']}")
+        else:
+            self.logger.debug(f"Successfully fetched ticker data for {symbol}")
             
         return response
     
@@ -168,6 +176,7 @@ class KuCoinClient:
         Returns:
             list: List of klines data
         """
+        self.logger.debug(f"Fetching {kline_type} klines for {symbol}")
         params = {
             "symbol": symbol,
             "type": kline_type
@@ -183,6 +192,11 @@ class KuCoinClient:
         query_string = urlencode(params)
         response = self._request("GET", f"{endpoint}?{query_string}")
         
+        if "error" in response:
+            self.logger.error(f"Error fetching klines for {symbol}: {response['error']}")
+        else:
+            self.logger.debug(f"Successfully fetched {len(response.get('data', []))} klines for {symbol}")
+        
         return response
     
     def get_24h_stats(self, symbol):
@@ -195,10 +209,16 @@ class KuCoinClient:
         Returns:
             dict: 24-hour statistics including high, low, volume, etc.
         """
+        self.logger.debug(f"Fetching 24h stats for {symbol}")
         endpoint = "/api/v1/market/stats"
         params = {"symbol": symbol}
         
         response = self._request("GET", f"{endpoint}?symbol={symbol}")
+        
+        if "error" in response:
+            self.logger.error(f"Error fetching 24h stats for {symbol}: {response['error']}")
+        else:
+            self.logger.debug(f"Successfully fetched 24h stats for {symbol}")
         
         return response
     
@@ -212,15 +232,18 @@ class KuCoinClient:
         Returns:
             list: List of symbol data dictionaries
         """
+        self.logger.debug("Fetching all symbols")
         endpoint = "/api/v1/symbols"
         
         response = self._request("GET", endpoint)
         
-        # Extract the data array from the response
-        if "data" in response:
-            return response["data"]
-        else:
+        if "error" in response:
+            self.logger.error(f"Error fetching symbols: {response['error']}")
             return []
+        else:
+            symbols = response.get("data", [])
+            self.logger.debug(f"Successfully fetched {len(symbols)} symbols")
+            return symbols
     
     def get_all_tickers(self):
         """
@@ -232,9 +255,15 @@ class KuCoinClient:
         Returns:
             dict: Ticker data for all symbols
         """
+        self.logger.debug("Fetching all tickers")
         endpoint = "/api/v1/market/allTickers"
         
         response = self._request("GET", endpoint)
+        
+        if "error" in response:
+            self.logger.error(f"Error fetching all tickers: {response['error']}")
+        else:
+            self.logger.debug("Successfully fetched all tickers")
         
         return response
     
@@ -248,9 +277,15 @@ class KuCoinClient:
         Returns:
             dict: List of available markets
         """
+        self.logger.debug("Fetching market list")
         endpoint = "/api/v1/markets"
         
         response = self._request("GET", endpoint)
+        
+        if "error" in response:
+            self.logger.error(f"Error fetching market list: {response['error']}")
+        else:
+            self.logger.debug("Successfully fetched market list")
         
         return response
     
@@ -264,6 +299,7 @@ class KuCoinClient:
         Returns:
             dict: List of symbol pairs
         """
+        self.logger.debug(f"Fetching symbols for market: {market}")
         endpoint = "/api/v1/symbols"
         params = {}
         
@@ -272,6 +308,11 @@ class KuCoinClient:
         
         query_string = f"?market={market}" if market else ""
         response = self._request("GET", f"{endpoint}{query_string}")
+        
+        if "error" in response:
+            self.logger.error(f"Error fetching symbols for market {market}: {response['error']}")
+        else:
+            self.logger.debug(f"Successfully fetched symbols for market {market}")
         
         return response
     
@@ -285,9 +326,15 @@ class KuCoinClient:
         Returns:
             dict: List of currencies
         """
+        self.logger.debug("Fetching currencies")
         endpoint = "/api/v1/currencies"
         
         response = self._request("GET", endpoint)
+        
+        if "error" in response:
+            self.logger.error(f"Error fetching currencies: {response['error']}")
+        else:
+            self.logger.debug("Successfully fetched currencies")
         
         return response
     
@@ -316,6 +363,7 @@ class KuCoinClient:
         headers = self._get_headers(method, endpoint, body)
         
         try:
+            self.logger.debug(f"Sending {method} request to {endpoint}")
             response = self.session.request(
                 method=method,
                 url=url,
@@ -325,12 +373,12 @@ class KuCoinClient:
             response.raise_for_status()
             return response.json()
         except requests.exceptions.HTTPError as e:
-            logging.error(f"HTTP Error: {e}")
+            self.logger.error(f"HTTP Error for {endpoint}: {e}")
             if response.status_code == 429:
-                logging.warning("Rate limit exceeded. Implementing backoff strategy.")
+                self.logger.warning("Rate limit exceeded. Implementing backoff strategy.")
                 raise RateLimitExceeded("Too many requests to KuCoin API")
             return {"error": str(e), "status_code": response.status_code}
         except requests.exceptions.RequestException as e:
-            logging.error(f"Request Error: {e}")
+            self.logger.error(f"Request Error for {endpoint}: {e}")
             return {"error": str(e)}
     

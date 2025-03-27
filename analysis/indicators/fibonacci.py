@@ -1,11 +1,25 @@
 import pandas as pd
 import numpy as np
+import logging
 
 class FibonacciRetracement:
-    def __init__(self, period=100):
+    def __init__(self, period=50):
         self.period = period
-        self.name = f"FIBONACCI_{period}"
-        self.levels = [0.0, 0.236, 0.382, 0.5, 0.618, 0.786, 1.0, 1.272, 1.618, 2.0, 2.618, 4.236]
+        self.name = f"FIBONACCI"
+        self.logger = logging.getLogger(__name__)
+        
+        # Fibonacci levels
+        self.levels = {
+            0.000: "0.000",
+            0.236: "0.236",
+            0.382: "0.382",
+            0.500: "0.500",
+            0.618: "0.618",
+            0.786: "0.786",
+            1.000: "1.000",
+            1.618: "1.618",
+            2.618: "2.618"
+        }
     
     def calculate(self, df):
         """Calculate Fibonacci Retracement levels
@@ -14,32 +28,70 @@ class FibonacciRetracement:
             df (pd.DataFrame): DataFrame with OHLC price data
             
         Returns:
-            dict: Fibonacci retracement levels
+            dict: Fibonacci levels and their prices
         """
-        # Use the specified period to find swing high and low
-        period_data = df.iloc[-self.period:]
+        try:
+            # Get high and low for the period
+            high = df['high'].rolling(window=self.period).max().iloc[-1]
+            low = df['low'].rolling(window=self.period).min().iloc[-1]
+            
+            # Calculate price range
+            price_range = high - low
+            
+            # Calculate Fibonacci levels
+            levels = {}
+            for level, name in self.levels.items():
+                levels[name] = high - (price_range * level)
+            
+            return {
+                "high": high,
+                "low": low,
+                "levels": levels
+            }
+        except Exception as e:
+            self.logger.error(f"Error calculating Fibonacci Retracement: {str(e)}", exc_info=True)
+            return {
+                "high": 0.0,
+                "low": 0.0,
+                "levels": {}
+            }
+    
+    def _find_closest_level(self, price, below_level, above_level):
+        """Find the closest Fibonacci level to the current price
         
-        high = period_data['high'].max()
-        low = period_data['low'].min()
-        
-        # Calculate retracement levels
-        diff = high - low
-        levels = {}
-        
-        for level in self.levels:
-            if diff > 0:
-                levels[level] = high - diff * level
+        Args:
+            price (float): Current price
+            below_level (tuple): (level, price) of the level below current price
+            above_level (tuple): (level, price) of the level above current price
+            
+        Returns:
+            tuple: (closest level, distance percentage)
+        """
+        try:
+            if not below_level and not above_level:
+                return None, 0.0
+            
+            if not below_level:
+                return above_level[0], ((above_level[1] - price) / price) * 100
+            
+            if not above_level:
+                return below_level[0], ((price - below_level[1]) / price) * 100
+            
+            # Calculate distance to both levels
+            dist_below = ((price - below_level[1]) / price) * 100
+            dist_above = ((above_level[1] - price) / price) * 100
+            
+            # Return the closer level
+            if dist_below < dist_above:
+                return below_level[0], dist_below
             else:
-                levels[level] = high
-        
-        return {
-            "high": high,
-            "low": low,
-            "levels": levels
-        }
+                return above_level[0], dist_above
+        except Exception as e:
+            self.logger.error(f"Error finding closest Fibonacci level: {str(e)}", exc_info=True)
+            return None, 0.0
     
     def get_signal(self, df):
-        """Generate trading signal based on Fibonacci Retracement
+        """Generate Fibonacci Retracement levels
         
         Args:
             df (pd.DataFrame): DataFrame with OHLC price data
@@ -47,128 +99,41 @@ class FibonacciRetracement:
         Returns:
             dict: Signal information
         """
-        fib_levels = self.calculate(df)
-        current_price = df['close'].iloc[-1]
-        
-        # Find the closest levels
-        levels = fib_levels["levels"]
-        sorted_levels = sorted(levels.items(), key=lambda x: x[1])
-        
-        # Find the level just below and just above the current price
-        below_level = None
-        above_level = None
-        
-        for level, price in sorted_levels:
-            if price <= current_price:
-                below_level = (level, price)
-            elif price > current_price:
-                above_level = (level, price)
-                break
-        
-        # Calculate how close price is to a support/resistance level
-        closest_level = None
-        distance_pct = None
-        
-        if below_level and above_level:
-            below_distance = (current_price - below_level[1]) / current_price
-            above_distance = (above_level[1] - current_price) / current_price
+        try:
+            fib_levels = self.calculate(df)
+            current_price = df['close'].iloc[-1]
+            previous_price = df['close'].iloc[-2] if len(df) > 1 else current_price
             
-            if below_distance < above_distance:
-                closest_level = below_level
-                distance_pct = below_distance
-            else:
-                closest_level = above_level
-                distance_pct = above_distance
-        elif below_level:
-            closest_level = below_level
-            distance_pct = (current_price - below_level[1]) / current_price
-        elif above_level:
-            closest_level = above_level
-            distance_pct = (above_level[1] - current_price) / current_price
-        
-        # Find next level above for potential profit target
-        next_level_above = None
-        potential_profit_pct = None
-        
-        if above_level:
-            next_level_above = above_level
-            potential_profit_pct = (next_level_above[1] - current_price) / current_price * 100
-        
-        # Find next significant level above (if current level is not the highest)
-        if above_level and sorted_levels[-1] != above_level:
-            # Find the index of the above_level in sorted_levels
-            for i, (level, price) in enumerate(sorted_levels):
-                if level == above_level[0] and price == above_level[1]:
-                    # If there's a next level, use it as the target
-                    if i + 1 < len(sorted_levels):
-                        next_level_above = sorted_levels[i + 1]
-                        potential_profit_pct = (next_level_above[1] - current_price) / current_price * 100
-                    break
-        
-        # Find next level below for potential stop loss
-        next_level_below = None
-        potential_loss_pct = None
-        
-        if below_level:
-            next_level_below = below_level
-            potential_loss_pct = (current_price - next_level_below[1]) / current_price * 100
-        
-        # Find next significant level below (if current level is not the lowest)
-        if below_level and sorted_levels[0] != below_level:
-            # Find the index of the below_level in sorted_levels
-            for i, (level, price) in enumerate(sorted_levels):
-                if level == below_level[0] and price == below_level[1]:
-                    # If there's a previous level, use it as the stop loss
-                    if i > 0:
-                        next_level_below = sorted_levels[i - 1]
-                        potential_loss_pct = (current_price - next_level_below[1]) / current_price * 100
-                    break
-        
-        # Calculate risk/reward ratio
-        risk_reward_ratio = None
-        if potential_profit_pct is not None and potential_loss_pct is not None and potential_loss_pct > 0:
-            risk_reward_ratio = potential_profit_pct / potential_loss_pct
-        
-        # Determine signal
-        signal = "neutral"
-        strength = 0.0
-        
-        if closest_level and distance_pct is not None and distance_pct < 0.01:  # Within 1% of a level
-            level_value = closest_level[0]
+            price_direction = "up" if current_price > previous_price else "down"
             
-            # Price near support
-            if closest_level == below_level:
-                if level_value <= 0.382:  # Strong support levels
-                    signal = "bullish"
-                    strength = 0.5 + (0.5 * (1 - level_value))  # Higher strength for lower levels
-                else:
-                    signal = "slightly_bullish"
-                    strength = 0.3
+            levels = fib_levels["levels"]
+            sorted_levels = sorted(levels.items(), key=lambda x: x[1])
             
-            # Price near resistance
-            elif closest_level == above_level:
-                if level_value >= 0.618:  # Strong resistance levels
-                    signal = "bearish"
-                    strength = 0.5 + (0.5 * level_value)  # Higher strength for higher levels
-                else:
-                    signal = "slightly_bearish"
-                    strength = 0.3
-        
-        return {
-            "indicator": self.name,
-            "value": {
-                "levels": fib_levels["levels"],
-                "closest_level": closest_level[0] if closest_level else None,
-                "closest_price": closest_level[1] if closest_level else None,
-                "distance_pct": distance_pct,
-                "next_level_above": next_level_above[0] if next_level_above else None,
-                "next_level_above_price": next_level_above[1] if next_level_above else None,  # Fixed field name
-                "potential_profit_pct": potential_profit_pct,
-                "next_level_below": next_level_below[0] if next_level_below else None,
-                "next_level_below_price": next_level_below[1] if next_level_below else None,
-                "potential_loss_pct": potential_loss_pct,
-                "risk_reward_ratio": risk_reward_ratio
-            },
-            "signal": signal,
-            "strength": strength
-        }
+            below_level = next(((level, price) for level, price in sorted_levels if price <= current_price), None)
+            above_level = next(((level, price) for level, price in sorted_levels if price > current_price), None)
+            
+            closest_level, distance_pct = self._find_closest_level(current_price, below_level, above_level)
+            
+            return {
+                "indicator": self.name,
+                "value": {
+                    "current_level": closest_level,
+                    "distance_pct": distance_pct,
+                    "price_direction": price_direction,
+                    "levels": levels
+                }
+            }
+        except Exception as e:
+            self.logger.error(f"Error generating Fibonacci Retracement signal: {str(e)}", exc_info=True)
+            return {
+                "indicator": self.name,
+                "value": {
+                    "current_level": None,
+                    "distance_pct": 0.0,
+                    "price_direction": "neutral",
+                    "potential_profit_pct": None,
+                    "potential_loss_pct": None,
+                    "risk_reward_ratio": None,
+                    "levels": {}
+                }
+            }

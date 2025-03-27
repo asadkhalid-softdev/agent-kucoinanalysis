@@ -5,10 +5,10 @@ import numpy as np
 class RSI:
     def __init__(self, window=14):
         self.window = window
-        self.name = f"RSI_{window}"
+        self.name = f"RSI"
         self.overbought = 70
         self.oversold = 30
-    
+
     def calculate(self, df):
         """Calculate Relative Strength Index
         
@@ -19,41 +19,35 @@ class RSI:
             pd.Series: RSI values
         """
         return ta.rsi(df['close'], length=self.window)
-    
+
     def get_signal(self, df):
-        """Generate trading signal based on RSI
+        """Generate trading signal based on RSI for trend following
         
         Args:
-            df (pd.DataFrame): DataFrame with 'close' price column
+            df (pd.DataFrame): DataFrame with OHLC price data
             
         Returns:
             dict: Signal information
         """
         rsi = self.calculate(df)
-        current_rsi = rsi.iloc[-1]
         
-        if current_rsi > self.overbought:
-            signal = "bearish"
-            strength = min(1.0, (current_rsi - self.overbought) / (100 - self.overbought))
-        elif current_rsi < self.oversold:
-            signal = "bullish"
-            strength = min(1.0, (self.oversold - current_rsi) / self.oversold)
-        else:
-            # Neutral zone
-            mid_point = (self.overbought + self.oversold) / 2
-            if current_rsi > mid_point:
-                signal = "slightly_bearish"
-                strength = (current_rsi - mid_point) / (self.overbought - mid_point) * 0.5
-            elif current_rsi < mid_point:
-                signal = "slightly_bullish"
-                strength = (mid_point - current_rsi) / (mid_point - self.oversold) * 0.5
-            else:
-                signal = "neutral"
-                strength = 0.0
-                
+        # Get current and previous RSI values
+        current_rsi = rsi.iloc[-1]
+        prev_rsi = rsi.iloc[-2] if len(rsi) > 1 else current_rsi
+        
+        # Determine RSI trend
+        rsi_trend = "up" if current_rsi > prev_rsi else "down"
+        
+        # Get longer-term trend (5 periods)
+        longer_rsi_trend = "up" if len(rsi) >= 5 and current_rsi > rsi.iloc[-5] else "down"
+        
         return {
             "indicator": self.name,
-            "value": current_rsi,
-            "signal": signal,
-            "strength": strength
+            "value": {
+                "rsi": current_rsi,
+                "rsi_trend": rsi_trend,
+                "longer_rsi_trend": longer_rsi_trend,
+                "overbought": self.overbought,
+                "oversold": self.oversold
+            }
         }

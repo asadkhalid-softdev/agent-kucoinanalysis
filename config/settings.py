@@ -32,15 +32,25 @@ class Settings(BaseSettings):
     default_timeframes: list = user_config.get_config().get("analysis", {}).get("timeframes", ["1hour"])
     main_timeframe: str = user_config.get_config().get("analysis", {}).get("main_timeframe", "1hour")
 
+    # Strategy-specific Settings
+    momentum_score_threshold: float = float(os.getenv("MOMENTUM_SCORE_THRESHOLD", "0.5"))
+    momentum_confidence_threshold: float = float(os.getenv("MOMENTUM_CONFIDENCE_THRESHOLD", "0.6"))
+    mean_reversion_score_threshold: float = float(os.getenv("MEAN_REVERSION_SCORE_THRESHOLD", "0.5"))
+    mean_reversion_confidence_threshold: float = float(os.getenv("MEAN_REVERSION_CONFIDENCE_THRESHOLD", "0.6"))
+    breakout_score_threshold: float = float(os.getenv("BREAKOUT_SCORE_THRESHOLD", "0.5"))
+    breakout_confidence_threshold: float = float(os.getenv("BREAKOUT_CONFIDENCE_THRESHOLD", "0.6"))
+
+    # Strategy Filters
+    enable_momentum_strategy: bool = os.getenv("ENABLE_MOMENTUM_STRATEGY", "true").lower() == "true"
+    enable_mean_reversion_strategy: bool = os.getenv("ENABLE_MEAN_REVERSION_STRATEGY", "true").lower() == "true"
+    enable_breakout_strategy: bool = os.getenv("ENABLE_BREAKOUT_STRATEGY", "true").lower() == "true"
+
     # Telegram Settings
     telegram_bot_token: str = os.getenv("TELEGRAM_BOT_TOKEN", "")
     telegram_chat_id: str = os.getenv("TELEGRAM_CHAT_ID", "")
-    telegram_notifications_enabled: bool = user_config.get_config().get("telegram", {}).get("telegram_notifications_enabled", False)
-    telegram_notify_on_sentiment: list = user_config.get_config().get("telegram", {}).get("telegram_notify_on_sentiment", ["strong buy"])
-    telegram_notify_on_confidence: float = user_config.get_config().get("telegram", {}).get("telegram_notify_on_confidence", 0)
-    telegram_notify_on_volume: float = user_config.get_config().get("telegram", {}).get("telegram_notify_on_volume", 100000)
-    telegram_notify_on_plr: float = user_config.get_config().get("telegram", {}).get("telegram_notify_on_plr", 0.0)
-    telegram_notify_on_rsi_buy: float = user_config.get_config().get("telegram", {}).get("telegram_notify_on_rsi_buy", 100)
+    telegram_notifications_enabled: bool = os.getenv("TELEGRAM_NOTIFICATIONS_ENABLED", "false").lower() == "true"
+    telegram_notify_on_volume: float = float(os.getenv("TELEGRAM_NOTIFY_ON_VOLUME", "0"))
+    telegram_notify_on_rsi_buy: float = float(os.getenv("TELEGRAM_NOTIFY_ON_RSI_BUY", "70"))
 
     class Config:
         env_file = ".env"

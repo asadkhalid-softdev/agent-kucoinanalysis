@@ -5,24 +5,26 @@ import os
 import json
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
+import logging
 
 class PerformanceAnalyzer:
     """
-    Analyzes performance logs to identify bottlenecks and trends
+    Analyzes application performance from logs
     """
     
-    def __init__(self, log_file: str = "logs/kucoin_analysis_bot_performance.log"):
+    def __init__(self, log_file: str = "logs/performance.log"):
         """
         Initialize the performance analyzer
         
         Args:
-            log_file (str): Path to performance log file
+            log_file (str): Path to the performance log file
         """
         self.log_file = log_file
+        self.logger = logging.getLogger(__name__)
     
     def load_logs(self, days: int = 7) -> pd.DataFrame:
         """
-        Load performance logs into a DataFrame
+        Load performance logs for analysis
         
         Args:
             days (int): Number of days of logs to load
@@ -30,10 +32,12 @@ class PerformanceAnalyzer:
         Returns:
             pd.DataFrame: DataFrame with performance data
         """
+        self.logger.debug(f"Loading performance logs for the last {days} days")
+        
         # Calculate start date
         start_date = datetime.now() - timedelta(days=days)
         
-        # Read log file
+        # Initialize empty list for logs
         logs = []
         
         try:
@@ -55,13 +59,16 @@ class PerformanceAnalyzer:
                             # Add to logs
                             logs.append(log_data)
                     except (json.JSONDecodeError, ValueError, KeyError) as e:
+                        self.logger.warning(f"Invalid log line: {str(e)}")
                         # Skip invalid lines
                         continue
         except FileNotFoundError:
+            self.logger.warning(f"Performance log file not found: {self.log_file}")
             return pd.DataFrame()
         
         # Convert to DataFrame
         if not logs:
+            self.logger.warning("No valid logs found in the specified time period")
             return pd.DataFrame()
         
         df = pd.DataFrame(logs)
@@ -78,6 +85,7 @@ class PerformanceAnalyzer:
             for col in metadata_df.columns:
                 df[f"metadata_{col}"] = metadata_df[col]
         
+        self.logger.info(f"Loaded {len(df)} performance log entries")
         return df
     
     def analyze_operation_performance(self, df: Optional[pd.DataFrame] = None) -> Dict[str, Any]:
@@ -90,10 +98,13 @@ class PerformanceAnalyzer:
         Returns:
             Dict[str, Any]: Analysis results
         """
+        self.logger.debug("Analyzing operation performance")
+        
         if df is None:
             df = self.load_logs()
         
         if df.empty:
+            self.logger.warning("No performance data available for analysis")
             return {"error": "No performance data available"}
         
         # Group by operation
@@ -107,13 +118,16 @@ class PerformanceAnalyzer:
         # Sort by mean duration (descending)
         operation_stats = operation_stats.sort_values("mean", ascending=False)
         
-        return {
+        results = {
             "operation_stats": operation_stats.to_dict(orient="records"),
             "total_operations": len(df),
             "unique_operations": len(operation_stats),
             "slowest_operation": operation_stats.iloc[0]["operation"] if not operation_stats.empty else None,
             "fastest_operation": operation_stats.iloc[-1]["operation"] if not operation_stats.empty else None
         }
+        
+        self.logger.info(f"Performance analysis complete: {len(operation_stats)} unique operations analyzed")
+        return results
     
     def analyze_time_trends(self, df: Optional[pd.DataFrame] = None) -> Dict[str, Any]:
         """

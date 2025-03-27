@@ -6,7 +6,7 @@ class BollingerBands:
     def __init__(self, window=20, window_dev=2):
         self.window = window
         self.window_dev = window_dev
-        self.name = f"BBANDS_{window}_{window_dev}"
+        self.name = f"BBANDS"
     
     def calculate(self, df):
         """Calculate Bollinger Bands
@@ -23,58 +23,44 @@ class BollingerBands:
         return bbands
     
     def get_signal(self, df):
-        """Generate trading signal based on Bollinger Bands
+        """Generate Bollinger Bands values
         
         Args:
-            df (pd.DataFrame): DataFrame with 'close' price column
+            df (pd.DataFrame): DataFrame with OHLC price data
             
         Returns:
             dict: Signal information
         """
-        bbands = self.calculate(df)
+        bb_df = self.calculate(df)
         
         # Get column names from pandas-ta output
-        upper_col = f"BBU_{self.window}_{float(self.window_dev)}"
-        middle_col = f"BBM_{self.window}_{float(self.window_dev)}"
-        lower_col = f"BBL_{self.window}_{float(self.window_dev)}"
-
-        current_price = df['close'].iloc[-1]
-        upper_band = bbands[upper_col].iloc[-1]
-        middle_band = bbands[middle_col].iloc[-1]
-        lower_band = bbands[lower_col].iloc[-1]
-
-        # Calculate bandwidth and %B
-        bandwidth = (upper_band - lower_band) / middle_band
-        percent_b = (current_price - lower_band) / (upper_band - lower_band) if upper_band != lower_band else 0.5
+        upper_col = f"BBU_{self.window}_{self.window_dev}"
+        middle_col = f"BBM_{self.window}_{self.window_dev}"
+        lower_col = f"BBL_{self.window}_{self.window_dev}"
         
-        # Determine signal
-        if current_price > upper_band:
-            signal = "bearish"
-            strength = min(1.0, (current_price / upper_band - 1) * 5)
-        elif current_price < lower_band:
-            signal = "bullish"
-            strength = min(1.0, (lower_band / current_price - 1) * 5)  # Corrected formula
-        else:
-            # Inside the bands
-            if percent_b > 0.8:
-                signal = "slightly_bearish"
-                strength = (percent_b - 0.8) * 5
-            elif percent_b < 0.2:
-                signal = "slightly_bullish"
-                strength = (0.2 - percent_b) * 5
-            else:
-                signal = "neutral"
-                strength = 0.0
-                
+        # Get current values
+        current_upper = bb_df[upper_col].iloc[-1]
+        current_middle = bb_df[middle_col].iloc[-1]
+        current_lower = bb_df[lower_col].iloc[-1]
+        current_price = df['close'].iloc[-1]
+        
+        # Calculate bandwidth
+        bandwidth = (current_upper - current_lower) / current_middle
+        
+        # Calculate percent B
+        percent_b = (current_price - current_lower) / (current_upper - current_lower)
+        
+        # Determine trend direction
+        trend_direction = "up" if current_middle > bb_df[middle_col].iloc[-2] else "down"
+        
         return {
             "indicator": self.name,
             "value": {
-                "upper": upper_band,
-                "middle": middle_band,
-                "lower": lower_band,
+                "upper": current_upper,
+                "middle": current_middle,
+                "lower": current_lower,
                 "bandwidth": bandwidth,
-                "percent_b": percent_b
-            },
-            "signal": signal,
-            "strength": strength
+                "percent_b": percent_b,
+                "trend_direction": trend_direction
+            }
         }

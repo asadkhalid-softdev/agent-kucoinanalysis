@@ -5,7 +5,7 @@ from datetime import datetime
 from analysis.indicators import (
     SimpleMovingAverage, ExponentialMovingAverage, RSI, 
     MACD, BollingerBands, OnBalanceVolume, StochasticOscillator,
-    AverageDirectionalIndex, FibonacciRetracement
+    AverageDirectionalIndex, FibonacciRetracement, CandlestickPattern
 )
 from analysis.sentiment import SentimentAnalyzer
 
@@ -53,6 +53,8 @@ class AnalysisEngine:
             indicators.append(AverageDirectionalIndex(length=14))  # Trend strength
         if 'FIBONACCI' in analysis_list.get('indicators', []):
             indicators.append(FibonacciRetracement())
+        if 'CANDLESTICK' in analysis_list.get('indicators', []):
+            indicators.append(CandlestickPattern())
         
         return indicators
     
@@ -99,19 +101,15 @@ class AnalysisEngine:
                     self.logger.error(f"Error calculating {indicator.name} for {symbol}: {str(e)}", exc_info=True)
             
             # Analyze sentiment
-            sentiment = self.sentiment_analyzer.analyze(indicator_signals, df)
-            
-            # Prepare analysis summary
-            summary = self._generate_summary(symbol, df, indicator_results, sentiment)
+            sentiment = self.sentiment_analyzer.analyze(indicator_signals)
             
             return {
                 "symbol": symbol,
-                "timestamp": datetime.now().isoformat(),
                 "price": df['close'].iloc[-1],
+                "volume": df['volume'].iloc[-1],
+                "timestamp": datetime.now().isoformat(),
                 "indicators": indicator_results,
-                "sentiment": sentiment,
-                "analysis_summary": summary,
-                "volume": df['volume'].iloc[-1]
+                "sentiment": sentiment
             }
             
         except Exception as e:
@@ -140,9 +138,9 @@ class AnalysisEngine:
         """
         # KuCoin API returns data in format [timestamp, open, close, high, low, volume, ...]
         # columns = ['timestamp', 'open', 'close', 'high', 'low', 'volume']
-        columns = ['timestamp', 'open', 'close', 'high', 'low', 'volume', 'amount']
+        columns = ['timestamp', 'open', 'close', 'high', 'low', 'amount', 'volume']
         df = pd.DataFrame(klines_data, columns=columns)
-        
+
         # Convert types
         for col in ['open', 'close', 'high', 'low', 'volume']:
             df[col] = pd.to_numeric(df[col])
@@ -157,57 +155,3 @@ class AnalysisEngine:
         df = df.sort_values('timestamp')
         
         return df
-    
-    def _generate_summary(self, symbol, df, indicator_results, sentiment):
-        """
-        Generate a human-readable analysis summary.
-        
-        Args:
-            symbol (str): Trading pair symbol
-            df (pd.DataFrame): Price data
-            indicator_results (dict): Results from technical indicators
-            sentiment (dict): Sentiment analysis results
-            
-        Returns:
-            str: Analysis summary
-        """
-        current_price = df['close'].iloc[-1]
-        prev_price = df['close'].iloc[-2]
-        price_change = (current_price - prev_price) / prev_price * 100
-        
-        summary_parts = []
-        
-        # Add price information
-        summary_parts.append(f"{symbol} is trading at {current_price} ({price_change:.2f}% change)")
-        
-        # Add sentiment
-        sentiment_str = f"{sentiment['strength']} {sentiment['overall']}" if sentiment['strength'] != 'none' else 'neutral'
-        summary_parts.append(f"Overall sentiment: {sentiment_str} (confidence: {sentiment['confidence']:.2f})")
-        
-        # Add key indicator insights
-        if 'RSI_14' in indicator_results:
-            rsi = indicator_results['RSI_14']
-            rsi_value = rsi['value']
-            if rsi_value > 70:
-                summary_parts.append(f"RSI is overbought at {rsi_value:.2f}")
-            elif rsi_value < 30:
-                summary_parts.append(f"RSI is oversold at {rsi_value:.2f}")
-        
-        if any(k.startswith('MACD') for k in indicator_results):
-            macd_key = next(k for k in indicator_results if k.startswith('MACD'))
-            macd = indicator_results[macd_key]
-            if macd['signal'] in ['bullish', 'strongly_bullish']:
-                summary_parts.append("MACD shows bullish momentum")
-            elif macd['signal'] in ['bearish', 'strongly_bearish']:
-                summary_parts.append("MACD shows bearish momentum")
-        
-        if any(k.startswith('BBANDS') for k in indicator_results):
-            bb_key = next(k for k in indicator_results if k.startswith('BBANDS'))
-            bb = indicator_results[bb_key]
-            if bb['signal'] == 'bullish':
-                summary_parts.append("Price is near the lower Bollinger Band, suggesting potential oversold conditions")
-            elif bb['signal'] == 'bearish':
-                summary_parts.append("Price is near the upper Bollinger Band, suggesting potential overbought conditions")
-        
-        # Combine all parts
-        return " ".join(summary_parts)

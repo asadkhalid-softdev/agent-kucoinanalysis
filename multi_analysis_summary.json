@@ -1,0 +1,170 @@
+{
+    "symbol": "BB-USDT",
+    "timestamp": "2025-03-21T15:08:07.364752",
+    "price": 0.1206,
+    "indicators": {
+        "SMA_20": {
+            "indicator": "SMA_20",
+            "value": 0.12105999999999999,
+            "sma_trend": "down",
+            "signal": "bearish",
+            "strength": 0.022798612258383866
+        },
+        "SMA_50": {
+            "indicator": "SMA_50",
+            "value": 0.12283,
+            "sma_trend": "down",
+            "signal": "bearish",
+            "strength": 0.10893104290482736
+        },
+        "EMA_9": {
+            "indicator": "EMA_9",
+            "value": 0.12071471419789653,
+            "ema_trend": "up",
+            "signal": "bearish",
+            "strength": 1.0
+        },
+        "EMA_21": {
+            "indicator": "EMA_21",
+            "value": 0.12121045453495705,
+            "ema_trend": "down",
+            "signal": "bearish",
+            "strength": 0.030217914979322025
+        },
+        "RSI": {
+            "indicator": "RSI",
+            "value": 40.02416646330084,
+            "rsi_trend": "down",
+            "longer_rsi_trend": "up",
+            "signal": "slightly_bearish",
+            "strength": 0.2493958384174791
+        },
+        "MACD": {
+            "indicator": "MACD",
+            "value": {
+                "macd": -0.0006400074909611586,
+                "signal": -0.0007418963906648561,
+                "histogram": 0.00010188889970369746,
+                "macd_trend": "up",
+                "hist_trend": "up",
+                "macd_position": "above"
+            },
+            "signal": "slightly_bullish",
+            "strength": 0.3407645218752825
+        },
+        "BBANDS": {
+            "indicator": "BBANDS",
+            "value": {
+                "upper": 0.12270121905911595,
+                "middle": 0.12105999999999999,
+                "lower": 0.11941878094088403,
+                "bandwidth": 0.027114142724532657,
+                "percent_b": 0.3598602674502921,
+                "trend_direction": "down"
+            },
+            "signal": "slightly_bearish",
+            "strength": 0.32006986627485395
+        },
+        "OBV": {
+            "indicator": "OBV",
+            "value": 2055740.9827500207,
+            "obv_sma": 2078702.1717500207,
+            "short_term_trend": "up",
+            "medium_term_trend": "down",
+            "obv_change": 0.02163968829825961,
+            "pattern": {
+                "confirmation": false,
+                "divergence": false,
+                "type": null
+            },
+            "signal": "neutral",
+            "strength": 0.0
+        },
+        "STOCH": {
+            "indicator": "STOCH",
+            "value": {
+                "k": 63.67521367521351,
+                "d": 49.17785917785909,
+                "k_trend": "up",
+                "d_trend": "up",
+                "price_trend": "down"
+            },
+            "signal": "neutral",
+            "strength": 0.0
+        },
+        "ADX": {
+            "indicator": "ADX",
+            "value": {
+                "adx": 29.490807177384017,
+                "plus_di": 17.408008222816296,
+                "minus_di": 34.86984379346183,
+                "trend_strength": "moderate"
+            },
+            "signal": "bearish",
+            "strength": 0.25748181288854644
+        },
+        "FIBONACCI": {
+            "indicator": "FIBONACCI",
+            "value": {
+                "levels": {
+                    "0.0": 0.127,
+                    "0.236": 0.1252064,
+                    "0.382": 0.12409680000000001,
+                    "0.5": 0.1232,
+                    "0.618": 0.1223032,
+                    "0.786": 0.1210264,
+                    "1.0": 0.1194,
+                    "1.272": 0.11733280000000001,
+                    "1.618": 0.1147032,
+                    "2.0": 0.11180000000000001,
+                    "2.618": 0.10710320000000001,
+                    "4.236": 0.09480640000000001
+                },
+                "trend": "uptrend",
+                "recent_trend": "down",
+                "closest_level": 0.786,
+                "closest_price": 0.1210264,
+                "distance_pct": 0.0035356550580431787,
+                "next_level_above": 0.786,
+                "next_level_above_price": 0.1210264,
+                "potential_profit_pct": 0.3535655058043179,
+                "next_level_below": 1.0,
+                "next_level_below_price": 0.1194,
+                "potential_loss_pct": 0.9950248756218845,
+                "risk_reward_ratio": 0.35533333333334166
+            },
+            "signal": "bearish",
+            "strength": 0.4
+        }
+    },
+    "sentiment": {
+        "overall": "sell",
+        "strength": "moderate",
+        "confidence": 0.64,
+        "score": -0.33
+    },
+    "analysis_summary": "BB-USDT is trading at 0.12 Multi-timeframe analysis shows moderate sell sentiment (confidence: 0.64) Timeframe breakdown: 15min: weak sell, 1hour: weak sell",
+    "volume": 22923.79,
+    "multi_timeframe": {
+        "timeframes_analyzed": [
+            "15min",
+            "1hour"
+        ],
+        "timeframe_sentiments": {
+            "15min": {
+                "overall": "sell",
+                "strength": "weak",
+                "confidence": 0.63,
+                "score": -0.1,
+                "volume": 22923.79
+            },
+            "1hour": {
+                "overall": "sell",
+                "strength": "weak",
+                "confidence": 0.65,
+                "score": -0.15,
+                "volume": 22923.79
+            }
+        }
+    }
+}
