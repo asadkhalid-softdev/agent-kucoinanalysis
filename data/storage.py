@@ -319,7 +319,7 @@ class SymbolStorage:
                 return False
             
             # symbols = [
-            #     "CTRL-USDT",
+            #     "WOOP-USDT",
             # ]
             
             # Save the symbols

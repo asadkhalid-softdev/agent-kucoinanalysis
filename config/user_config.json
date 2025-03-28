@@ -4,8 +4,8 @@
     "main_timeframe": "15min",
     "timeframes": ["15min"],
     "indicators": [
-      "RSI", "MACD", "BBANDS", "SMA", "EMA", 
-      "STOCH", "ADX", "FIBONACCI", "OBV", "CANDLESTICK"
+      "RSI", "MACD", "BBANDS", 
+      "STOCH", "ADX", "FIBONACCI", "CANDLESTICK", "OBV"
     ]
   },
   "display": {

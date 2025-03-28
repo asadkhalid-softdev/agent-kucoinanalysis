@@ -80,30 +80,30 @@ class SentimentAnalyzer:
         
         # Strategy-specific weights for indicators
         MOMENTUM_WEIGHTS = {
-            "MACD": 1.5,      # Primary momentum indicator
-            "RSI": 1.2,       # Momentum confirmation
-            "STOCH": 1.0,     # Momentum confirmation
-            "ADX": 0.8,       # Trend strength
-            "OBV": 0.7,       # Volume confirmation
-            "CANDLESTICK": 0.6 # Candlestick pattern confirmation
+            "MACD": 1.5,      # Keep as primary (good for daytrading)
+            "RSI": 1.3,       # Increase slightly (faster signals)
+            "STOCH": 1.1,     # Increase slightly (good for short-term)
+            "ADX": 0.9,       # Increase (trend strength is crucial for daytrading)
+            "OBV": 0.8,       # Increase (volume is more important for daytrading)
+            "CANDLESTICK": 0.7 # Increase (candlestick patterns are crucial for daytrading)
         }
         
         MEAN_REVERSION_WEIGHTS = {
-            "BBANDS": 1.5,    # Primary mean reversion indicator
-            "RSI": 1.2,       # Overbought/oversold levels
-            "STOCH": 1.0,     # Overbought/oversold confirmation
-            "FIBONACCI": 0.8, # Support/resistance levels
-            "ADX": 0.5,       # Trend strength (lower weight for mean reversion)
-            "CANDLESTICK": 0.4 # Candlestick pattern confirmation
+            "BBANDS": 1.4,    # Slightly decrease (mean reversion is less reliable in daytrading)
+            "RSI": 1.3,       # Increase (more important for short-term reversals)
+            "STOCH": 1.2,     # Increase (better for short-term reversals)
+            "FIBONACCI": 0.6, # Decrease (less reliable for daytrading)
+            "ADX": 0.7,       # Increase (trend strength is important)
+            "CANDLESTICK": 0.8 # Increase significantly (crucial for daytrading reversals)
         }
         
         BREAKOUT_WEIGHTS = {
-            "BBANDS": 1.3,    # Volatility and breakout levels
-            "OBV": 1.2,       # Volume confirmation
-            "ADX": 1.0,       # Trend strength
-            "MACD": 0.8,      # Momentum confirmation
-            "RSI": 0.7,       # Momentum confirmation
-            "CANDLESTICK": 0.5 # Candlestick pattern confirmation
+            "BBANDS": 1.2,    # Decrease (volatility is less reliable for daytrading breakouts)
+            "OBV": 1.5,       # Increase significantly (volume is crucial for breakouts)
+            "ADX": 1.3,       # Increase (trend strength is crucial for breakouts)
+            "MACD": 1.0,      # Increase (momentum confirmation is important)
+            "RSI": 0.8,       # Slightly increase (momentum confirmation)
+            "CANDLESTICK": 0.9 # Increase significantly (crucial for breakout confirmation)
         }
         
         # Calculate scores for each strategy
@@ -145,6 +145,20 @@ class SentimentAnalyzer:
                             score = 0.0
                         else:
                             score = 0.0
+                    elif indicator_type == "ADX":
+                        # ADX momentum score based on trend strength and DI crossover
+                        if value["trend_strength"] == "strong":
+                            score = 0.8 if value["plus_di"] > value["minus_di"] else -0.8
+                        elif value["trend_strength"] == "moderate":
+                            score = 0.5 if value["plus_di"] > value["minus_di"] else -0.5
+                        else:
+                            score = 0.0
+                    elif indicator_type == "OBV":
+                        # OBV momentum score based on trend and confirmation
+                        if value["pattern"]["confirmation"]:
+                            score = 0.6 if value["short_term_trend"] == "up" else -0.6
+                        else:
+                            score = 0.3 if value["short_term_trend"] == "up" else -0.3
                     momentum_scores.append(score * momentum_weight)
             
             # Calculate mean reversion score
@@ -184,6 +198,46 @@ class SentimentAnalyzer:
                             score = -0.6  # Potential reversal from uptrend
                         else:
                             score = 0.0
+                    elif indicator_type == "FIBONACCI":
+                        # Fibonacci mean reversion score based on current level and distance
+                        current_level = value["current_level"]
+                        distance_pct = value["distance_pct"]
+                        price_direction = value["price_direction"]
+                        
+                        # Strong reversal signals at extreme levels
+                        if current_level in ["0.786", "1.618"]:
+                            score = -0.8 if price_direction == "up" else 0.8
+                        elif current_level in ["0.236", "0.382"]:
+                            score = 0.8 if price_direction == "down" else -0.8
+                        # Moderate reversal signals at standard levels
+                        elif current_level in ["0.500", "0.618"]:
+                            if distance_pct > 0.5:  # Price is significantly away from level
+                                score = -0.6 if price_direction == "up" else 0.6
+                            else:
+                                score = 0.0
+                        elif current_level in ["0.382", "0.500"]:
+                            if distance_pct > 0.5:  # Price is significantly away from level
+                                score = 0.6 if price_direction == "down" else -0.6
+                            else:
+                                score = 0.0
+                        else:
+                            score = 0.0
+                    elif indicator_type == "ADX":
+                        # ADX mean reversion score based on trend strength and potential reversal
+                        if value["trend_strength"] == "strong":
+                            # Strong trend - look for potential reversal
+                            if value["plus_di"] > value["minus_di"]:
+                                score = -0.6  # Potential reversal from uptrend
+                            else:
+                                score = 0.6   # Potential reversal from downtrend
+                        elif value["trend_strength"] == "moderate":
+                            # Moderate trend - weaker reversal signals
+                            if value["plus_di"] > value["minus_di"]:
+                                score = -0.4  # Potential reversal from uptrend
+                            else:
+                                score = 0.4   # Potential reversal from downtrend
+                        else:
+                            score = 0.0  # Weak trend - no clear reversal signal
                     mean_reversion_scores.append(score * mean_reversion_weight)
             
             # Calculate breakout score
@@ -222,6 +276,30 @@ class SentimentAnalyzer:
                             score = 0.6  # Potential breakout to the upside
                         elif value["pattern"] in ["bearish_engulfing", "shooting_star"]:
                             score = -0.6  # Potential breakout to the downside
+                        else:
+                            score = 0.0
+                    elif indicator_type == "MACD":
+                        # MACD breakout score based on histogram momentum and signal line crossover
+                        if value["hist_trend"] == "up" and value["normalized_hist"] > 0.5:
+                            score = 0.7  # Strong upward momentum breakout
+                        elif value["hist_trend"] == "down" and value["normalized_hist"] < -0.5:
+                            score = -0.7  # Strong downward momentum breakout
+                        elif value["hist_trend"] == "up" and value["normalized_hist"] > 0.2:
+                            score = 0.4  # Moderate upward momentum breakout
+                        elif value["hist_trend"] == "down" and value["normalized_hist"] < -0.2:
+                            score = -0.4  # Moderate downward momentum breakout
+                        else:
+                            score = 0.0
+                    elif indicator_type == "RSI":
+                        # RSI breakout score based on momentum and overbought/oversold levels
+                        if value["rsi"] > 70 and value["rsi_trend"] == "up":
+                            score = 0.6  # Strong upward momentum breakout
+                        elif value["rsi"] < 30 and value["rsi_trend"] == "down":
+                            score = -0.6  # Strong downward momentum breakout
+                        elif value["rsi"] > 60 and value["rsi_trend"] == "up":
+                            score = 0.4  # Moderate upward momentum breakout
+                        elif value["rsi"] < 40 and value["rsi_trend"] == "down":
+                            score = -0.4  # Moderate downward momentum breakout
                         else:
                             score = 0.0
                     breakout_scores.append(score * breakout_weight)
