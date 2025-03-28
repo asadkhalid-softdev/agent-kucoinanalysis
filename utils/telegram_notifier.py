@@ -6,6 +6,10 @@ from datetime import datetime, timedelta, timezone
 import numpy as np
 from config.settings import Settings
 
+import json
+import numpy as np
+from datetime import datetime, date
+
 class NumpyEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, np.integer):
@@ -17,9 +21,12 @@ class NumpyEncoder(json.JSONEncoder):
         elif isinstance(obj, np.bool_):
             return bool(obj)
         elif isinstance(obj, np.datetime64):
-            return obj.astype(str)
+            return str(obj)
         elif isinstance(obj, np.timedelta64):
-            return obj.astype(str)
+            return str(obj)
+        # Add handling for Python's datetime objects
+        elif isinstance(obj, (datetime, date)):
+            return obj.isoformat()
         return super(NumpyEncoder, self).default(obj)
 
 class TelegramNotifier:
@@ -240,6 +247,7 @@ class TelegramNotifier:
         """
         try:
             sentiment = analysis.get("sentiment", {})
+            timestamp = analysis.get("timestamp", {})
             strategy = sentiment.get("strategy", {})
             settings = Settings()
             
@@ -294,7 +302,7 @@ class TelegramNotifier:
                     #     message += f"• BB: Upper: {bbands_data.get('upper', 0.0):.2f} Lower: {bbands_data.get('lower', 0.0):.2f}\n"
 
             # Add timestamp
-            message += f"\n<i>Generated at {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M')} UTC</i>"
+            message += f"\n<i>Generated at {timestamp} UTC</i>"
             
             return self.send_message(message, chat_id)
             

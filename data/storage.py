@@ -5,6 +5,10 @@ from datetime import datetime
 from typing import List, Dict, Any, Optional
 import numpy as np
 
+import json
+import numpy as np
+from datetime import datetime, date
+
 class NumpyEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, np.integer):
@@ -16,9 +20,12 @@ class NumpyEncoder(json.JSONEncoder):
         elif isinstance(obj, np.bool_):
             return bool(obj)
         elif isinstance(obj, np.datetime64):
-            return obj.astype(str)
+            return str(obj)
         elif isinstance(obj, np.timedelta64):
-            return obj.astype(str)
+            return str(obj)
+        # Add handling for Python's datetime objects
+        elif isinstance(obj, (datetime, date)):
+            return obj.isoformat()
         return super(NumpyEncoder, self).default(obj)
 
 class SymbolStorage:
@@ -318,9 +325,9 @@ class SymbolStorage:
                 self.logger.warning("No symbols fetched from KuCoin, keeping existing symbols")
                 return False
             
-            # symbols = [
-            #     "WOOP-USDT",
-            # ]
+            symbols = [
+                "FOMO-USDT",
+            ]
             
             # Save the symbols
             symbols = sorted(symbols)

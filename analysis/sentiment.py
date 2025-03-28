@@ -108,8 +108,11 @@ class SentimentAnalyzer:
         
         # Calculate scores for each strategy
         momentum_scores = []
+        momentum_scores_dict = {}
         mean_reversion_scores = []
+        mean_reversion_scores_dict = {}
         breakout_scores = []
+        breakout_scores_dict = {}
         
         for indicator_type, signals in indicator_groups.items():
             # Calculate momentum score
@@ -160,6 +163,7 @@ class SentimentAnalyzer:
                         else:
                             score = 0.3 if value["short_term_trend"] == "up" else -0.3
                     momentum_scores.append(score * momentum_weight)
+                    momentum_scores_dict[indicator_type] = score
             
             # Calculate mean reversion score
             if indicator_type in MEAN_REVERSION_WEIGHTS:
@@ -239,7 +243,8 @@ class SentimentAnalyzer:
                         else:
                             score = 0.0  # Weak trend - no clear reversal signal
                     mean_reversion_scores.append(score * mean_reversion_weight)
-            
+                    mean_reversion_scores_dict[indicator_type] = score
+
             # Calculate breakout score
             if indicator_type in BREAKOUT_WEIGHTS:
                 breakout_weight = BREAKOUT_WEIGHTS[indicator_type]
@@ -303,7 +308,8 @@ class SentimentAnalyzer:
                         else:
                             score = 0.0
                     breakout_scores.append(score * breakout_weight)
-        
+                    breakout_scores_dict[indicator_type] = score
+            
         # Calculate weighted average scores
         weighted_score_momentum = sum(momentum_scores) / sum(MOMENTUM_WEIGHTS.values()) if momentum_scores else 0.0
         weighted_score_mean_reversion = sum(mean_reversion_scores) / sum(MEAN_REVERSION_WEIGHTS.values()) if mean_reversion_scores else 0.0
@@ -317,16 +323,19 @@ class SentimentAnalyzer:
         result = {
             "strategy": {
                 "momentum": {
-                    "score": round(weighted_score_momentum, 2),
-                    "confidence": round(confidence_momentum, 2)
+                    "score": round(weighted_score_momentum, 1),
+                    "confidence": round(confidence_momentum, 1),
+                    "scores": momentum_scores_dict
                 },
                 "mean_reversion": {
-                    "score": round(weighted_score_mean_reversion, 2),
-                    "confidence": round(confidence_mean_reversion, 2)
+                    "score": round(weighted_score_mean_reversion, 1),
+                    "confidence": round(confidence_mean_reversion, 1),
+                    "scores": mean_reversion_scores_dict
                 },
                 "breakout": {
-                    "score": round(weighted_score_breakout, 2),
-                    "confidence": round(confidence_breakout, 2)
+                    "score": round(weighted_score_breakout, 1),
+                    "confidence": round(confidence_breakout, 1),
+                    "scores": breakout_scores_dict
                 }
             }
         }

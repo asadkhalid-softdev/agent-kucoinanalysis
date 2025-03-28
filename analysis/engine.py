@@ -1,6 +1,6 @@
 import pandas as pd
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 from analysis.indicators import (
     SimpleMovingAverage, ExponentialMovingAverage, RSI, 
@@ -107,7 +107,7 @@ class AnalysisEngine:
                 "symbol": symbol,
                 "price": df['close'].iloc[-1],
                 "volume": df['volume'].iloc[-1],
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": df['timestamp'].iloc[-1].isoformat() if not df.empty else datetime.now(timezone.utc).isoformat(),
                 "indicators": indicator_results,
                 "sentiment": sentiment
             }
@@ -116,7 +116,7 @@ class AnalysisEngine:
             self.logger.error(f"Error analyzing {symbol}: {str(e)}", exc_info=True)
             return {
                 "symbol": symbol,
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": df['timestamp'].iloc[-1].isoformat() if not df.empty else datetime.now(timezone.utc).isoformat(),
                 "error": str(e),
                 "indicators": {},
                 "sentiment": {

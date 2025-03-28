@@ -11,6 +11,7 @@ import signal
 import sys
 import subprocess
 from pathlib import Path
+from datetime import timezone
 
 import platform
 
@@ -40,6 +41,10 @@ scheduler = None
 dashboard_process = None
 shutdown_event = threading.Event()
 
+import json
+import numpy as np
+from datetime import datetime, date
+
 class NumpyEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, np.integer):
@@ -51,9 +56,12 @@ class NumpyEncoder(json.JSONEncoder):
         elif isinstance(obj, np.bool_):
             return bool(obj)
         elif isinstance(obj, np.datetime64):
-            return obj.astype(str)
+            return str(obj)
         elif isinstance(obj, np.timedelta64):
-            return obj.astype(str)
+            return str(obj)
+        # Add handling for Python's datetime objects
+        elif isinstance(obj, (datetime, date)):
+            return obj.isoformat()
         return super(NumpyEncoder, self).default(obj)
 
 def signal_handler(signum, frame):
@@ -137,7 +145,11 @@ def analyze_symbol(symbol):
     try:
         # Get klines data for different timeframes
         timeframe_data = {}
-        current_time = int(time.time())
+
+        # current_time = int(time.time())
+
+        specific_time_utc = "2025-03-27T10:01:00"  # UTC time
+        current_time = int(datetime.strptime(specific_time_utc, "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc).timestamp())
 
         settings = Settings()
         primary_tf = settings.main_timeframe
