@@ -2,7 +2,7 @@ import requests
 import logging
 from typing import Dict, Any, List, Optional
 import os, json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import numpy as np
 from config.settings import Settings
 
@@ -89,7 +89,7 @@ class TelegramNotifier:
     
     def _clean_old_notifications(self):
         """Remove notifications older than the cooldown period"""
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         cooldown_threshold = now - timedelta(hours=self.notification_cooldown)
         
         # Find symbols with old notifications
@@ -117,7 +117,7 @@ class TelegramNotifier:
         Returns:
             bool: True if notification should be sent
         """
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         
         # Clean old notifications first
         self._clean_old_notifications()
@@ -248,18 +248,12 @@ class TelegramNotifier:
                 return False
             
             # Get basic analysis data
-            overall = sentiment.get("overall", "neutral")
-            strength = sentiment.get("strength", "none")
-            confidence = sentiment.get("confidence", 0.0)
-            score = sentiment.get("score", 0.0)
             volume = analysis.get("volume", 0.0)
             price = analysis.get("price", 0.0)
             
             # Build the message
             message = f"<b>🚨 {symbol} Alert</b>\n\n"
             message += f"💰 Current Price: ${price:,.2f}\n"
-            message += f"🎯 Sentiment: {strength} {overall}\n"
-            message += f"🔍 Confidence: {confidence:.2f} ({score:.2f})\n"
             message += f"📊 Volume: {volume:,.0f}\n\n"
             
             # Add strategy details
@@ -292,15 +286,15 @@ class TelegramNotifier:
                             closest_level = indicator["value"].get("current_level", "Unknown")
                             fib_message = f"• Fibonacci: Near {closest_level} level"
                             message += fib_message + "\n"
-                    elif name.startswith("MACD"):
-                        macd_data = indicator.get("value", {})
-                        message += f"• MACD: {macd_data.get('macd', 0.0):.2f} (Signal: {macd_data.get('signal', 0.0):.2f})\n"
-                    elif name.startswith("BBANDS"):
-                        bbands_data = indicator.get("value", {})
-                        message += f"• BB: Upper: {bbands_data.get('upper', 0.0):.2f} Lower: {bbands_data.get('lower', 0.0):.2f}\n"
+                    # elif name.startswith("MACD"):
+                    #     macd_data = indicator.get("value", {})
+                    #     message += f"• MACD: {macd_data.get('macd', 0.0):.2f} (Signal: {macd_data.get('signal', 0.0):.2f})\n"
+                    # elif name.startswith("BBANDS"):
+                    #     bbands_data = indicator.get("value", {})
+                    #     message += f"• BB: Upper: {bbands_data.get('upper', 0.0):.2f} Lower: {bbands_data.get('lower', 0.0):.2f}\n"
 
             # Add timestamp
-            message += f"\n<i>Generated at {analysis.get('timestamp', datetime.now().isoformat())}</i>"
+            message += f"\n<i>Generated at {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M')} UTC</i>"
             
             return self.send_message(message, chat_id)
             

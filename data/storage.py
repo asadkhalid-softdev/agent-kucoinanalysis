@@ -319,7 +319,7 @@ class SymbolStorage:
                 return False
             
             # symbols = [
-            #     "DBR-USDT",
+            #     "CTRL-USDT",
             # ]
             
             # Save the symbols
