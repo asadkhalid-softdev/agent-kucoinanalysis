@@ -146,10 +146,10 @@ def analyze_symbol(symbol):
         # Get klines data for different timeframes
         timeframe_data = {}
 
-        # current_time = int(time.time())
+        current_time = int(time.time())
 
-        specific_time_utc = "2025-03-27T10:01:00"  # UTC time
-        current_time = int(datetime.strptime(specific_time_utc, "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc).timestamp())
+        # specific_time_utc = "2025-03-28T12:01:00"  # UTC time
+        # current_time = int(datetime.strptime(specific_time_utc, "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc).timestamp())
 
         settings = Settings()
         primary_tf = settings.main_timeframe
@@ -301,9 +301,9 @@ def analyze_symbol(symbol):
             rsi = analysis.get("indicators", {}).get("RSI", {}).get("value", {}).get("rsi", settings.telegram_notify_on_rsi_buy)
 
             # Check each strategy for buy signals
-            momentum_signal = settings.enable_momentum_strategy and strategy["momentum"]["score"] >= settings.momentum_score_threshold and strategy["momentum"]["confidence"] >= settings.momentum_confidence_threshold
-            mean_reversion_signal = settings.enable_mean_reversion_strategy and strategy["mean_reversion"]["score"] >= settings.mean_reversion_score_threshold and strategy["mean_reversion"]["confidence"] >= settings.mean_reversion_confidence_threshold
-            breakout_signal = settings.enable_breakout_strategy and strategy["breakout"]["score"] >= settings.breakout_score_threshold and strategy["breakout"]["confidence"] >= settings.breakout_confidence_threshold
+            momentum_signal = settings.enable_momentum_strategy and strategy["momentum"]["score"] >= float(settings.momentum_score_threshold.split("_")[0]) and strategy["momentum"]["score"] <= float(settings.momentum_score_threshold.split("_")[1]) and strategy["momentum"]["confidence"] >= settings.momentum_confidence_threshold
+            mean_reversion_signal = settings.enable_mean_reversion_strategy and strategy["mean_reversion"]["score"] >= float(settings.mean_reversion_score_threshold.split("_")[0]) and strategy["mean_reversion"]["score"] <= float(settings.mean_reversion_score_threshold.split("_")[1]) and strategy["mean_reversion"]["confidence"] >= settings.mean_reversion_confidence_threshold
+            breakout_signal = settings.enable_breakout_strategy and strategy["breakout"]["score"] >= float(settings.breakout_score_threshold.split("_")[0]) and strategy["breakout"]["score"] <= float(settings.breakout_score_threshold.split("_")[1]) and strategy["breakout"]["confidence"] >= settings.breakout_confidence_threshold
 
             # Send notification if any enabled strategy shows a buy signal and other conditions are met
             if (momentum_signal or mean_reversion_signal or breakout_signal) and \
@@ -378,7 +378,7 @@ def start_scheduler():
         analyze_all_symbols, 
         'interval', 
         minutes=settings.analysis_interval,
-        next_run_time=datetime.now() + timedelta(seconds=5)  # First run after 1 minutes
+        next_run_time=datetime.now() + timedelta(seconds=2)  # First run after 1 minutes
     )
 
     scheduler.add_job(

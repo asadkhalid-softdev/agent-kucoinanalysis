@@ -48,7 +48,7 @@ class AnalysisEngine:
         if 'OBV' in analysis_list.get('indicators', []):
             indicators.append(OnBalanceVolume())
         if 'STOCH' in analysis_list.get('indicators', []):
-            indicators.append(StochasticOscillator(k_period=14, d_period=3, smooth_k=3))  
+            indicators.append(StochasticOscillator(k_period=14, d_period=3, smooth_k=1))  
         if 'ADX' in analysis_list.get('indicators', []):
             indicators.append(AverageDirectionalIndex(length=14))  # Trend strength
         if 'FIBONACCI' in analysis_list.get('indicators', []):

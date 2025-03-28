@@ -140,14 +140,13 @@ class SentimentAnalyzer:
                             score = -0.5 - ((50 - value["k"]) / 50) * 0.5
                     elif indicator_type == "CANDLESTICK":
                         # Candlestick pattern momentum score
-                        if value["pattern"] in ["bullish_engulfing", "hammer"]:
+                        if value["pattern"] == "bullish":
                             score = 0.8
-                        elif value["pattern"] in ["bearish_engulfing", "shooting_star"]:
+                        elif value["pattern"] == "bearish":
                             score = -0.8
-                        elif value["pattern"] == "doji":
-                            score = 0.0
                         else:
                             score = 0.0
+
                     elif indicator_type == "ADX":
                         # ADX momentum score based on trend strength and DI crossover
                         if value["trend_strength"] == "strong":
@@ -196,9 +195,9 @@ class SentimentAnalyzer:
                             score = 0.0
                     elif indicator_type == "CANDLESTICK":
                         # Candlestick pattern mean reversion score
-                        if value["pattern"] in ["bullish_engulfing", "hammer"]:
+                        if value["pattern"] == "bullish":
                             score = 0.6  # Potential reversal from downtrend
-                        elif value["pattern"] in ["bearish_engulfing", "shooting_star"]:
+                        elif value["pattern"] == "bearish":
                             score = -0.6  # Potential reversal from uptrend
                         else:
                             score = 0.0
@@ -323,8 +322,8 @@ class SentimentAnalyzer:
         result = {
             "strategy": {
                 "momentum": {
-                    "score": round(weighted_score_momentum, 1),
-                    "confidence": round(confidence_momentum, 1),
+                    "score": round(weighted_score_momentum, 2),
+                    "confidence": round(confidence_momentum, 2),
                     "scores": momentum_scores_dict
                 },
                 "mean_reversion": {

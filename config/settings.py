@@ -33,11 +33,11 @@ class Settings(BaseSettings):
     main_timeframe: str = user_config.get_config().get("analysis", {}).get("main_timeframe", "1hour")
 
     # Strategy-specific Settings
-    momentum_score_threshold: float = float(os.getenv("MOMENTUM_SCORE_THRESHOLD", "0.5"))
+    momentum_score_threshold: str = str(os.getenv("MOMENTUM_SCORE_THRESHOLD", "0.3_0.4"))
     momentum_confidence_threshold: float = float(os.getenv("MOMENTUM_CONFIDENCE_THRESHOLD", "0.6"))
-    mean_reversion_score_threshold: float = float(os.getenv("MEAN_REVERSION_SCORE_THRESHOLD", "0.5"))
+    mean_reversion_score_threshold: str = str(os.getenv("MEAN_REVERSION_SCORE_THRESHOLD", "0.8_0.9"))
     mean_reversion_confidence_threshold: float = float(os.getenv("MEAN_REVERSION_CONFIDENCE_THRESHOLD", "0.6"))
-    breakout_score_threshold: float = float(os.getenv("BREAKOUT_SCORE_THRESHOLD", "0.5"))
+    breakout_score_threshold: str = str(os.getenv("BREAKOUT_SCORE_THRESHOLD", "0.2_0.3"))
     breakout_confidence_threshold: float = float(os.getenv("BREAKOUT_CONFIDENCE_THRESHOLD", "0.6"))
 
     # Strategy Filters

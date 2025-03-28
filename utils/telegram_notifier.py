@@ -271,11 +271,11 @@ class TelegramNotifier:
                 confidence = data.get("confidence", 0.0)
                 
                 # Get thresholds for this strategy
-                score_threshold = getattr(settings, f"{strategy_name.lower()}_score_threshold", 0.5)
+                score_threshold = getattr(settings, f"{strategy_name.lower()}_score_threshold", "0.3_0.4")
                 confidence_threshold = getattr(settings, f"{strategy_name.lower()}_confidence_threshold", 0.6)
                 
                 # Determine signal based on thresholds
-                if score >= score_threshold and confidence >= confidence_threshold:
+                if score >= float(score_threshold.split("_")[0]) and score <= float(score_threshold.split("_")[1]): #and confidence >= confidence_threshold:
                     signal = "🟢"  # Strong buy signal
                 else:
                     signal = "🔴"  # Strong sell signal
