@@ -253,8 +253,8 @@ class TelegramNotifier:
             
             # Build the message
             message = f"<b>🚨 {symbol} Alert</b>\n\n"
-            message += f"💰 Current Price: ${price:,.2f}\n"
-            message += f"📊 Volume: {volume:,.0f}\n\n"
+            message += f"💰 Current Price: ${price}\n"
+            message += f"📊 Volume: {volume}\n\n"
             
             # Add strategy details
             message += "<b>Strategy Analysis:</b>\n"
