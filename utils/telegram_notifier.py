@@ -4,6 +4,7 @@ from typing import Dict, Any, List, Optional
 import os, json
 from datetime import datetime, timedelta
 import numpy as np
+from config.settings import Settings
 
 class NumpyEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -121,6 +122,47 @@ class TelegramNotifier:
         # Clean old notifications first
         self._clean_old_notifications()
         
+        # Extract sentiment data with defaults
+        current_sentiment = {
+            "strategy": sentiment.get("strategy", {}),
+            "overall": "neutral",  # Will be calculated based on strategy scores
+            "strength": "none",    # Will be calculated based on confidence
+            "confidence": 0.0,     # Will be calculated based on strategy confidences
+            "score": 0.0          # Will be calculated based on strategy scores
+        }
+        
+        # Calculate overall sentiment based on strategy scores
+        strategy_scores = []
+        strategy_confidences = []
+        for strategy_name, data in current_sentiment["strategy"].items():
+            score = data.get("score", 0.0)
+            confidence = data.get("confidence", 0.0)
+            strategy_scores.append(score)
+            strategy_confidences.append(confidence)
+        
+        if strategy_scores:
+            # Calculate overall score as weighted average of strategy scores
+            current_sentiment["score"] = sum(score * conf for score, conf in zip(strategy_scores, strategy_confidences)) / sum(strategy_confidences)
+            
+            # Determine overall sentiment
+            if current_sentiment["score"] >= 0.5:
+                current_sentiment["overall"] = "buy"
+            elif current_sentiment["score"] <= -0.5:
+                current_sentiment["overall"] = "sell"
+            else:
+                current_sentiment["overall"] = "neutral"
+            
+            # Calculate overall confidence
+            current_sentiment["confidence"] = sum(strategy_confidences) / len(strategy_confidences)
+            
+            # Determine strength based on confidence
+            if current_sentiment["confidence"] >= 0.7:
+                current_sentiment["strength"] = "strong"
+            elif current_sentiment["confidence"] >= 0.5:
+                current_sentiment["strength"] = "moderate"
+            else:
+                current_sentiment["strength"] = "weak"
+        
         # Check if we have a recent notification for this symbol
         if symbol in self.recent_notifications:
             last_notification = self.recent_notifications[symbol]
@@ -128,22 +170,25 @@ class TelegramNotifier:
             last_sentiment = last_notification.get("sentiment", {})
             
             # If last notification is within cooldown period
-            if (last_timestamp and now - last_timestamp < timedelta(hours=self.notification_cooldown)) or last_sentiment.get("confidence") < sentiment.get("confidence"):
-                self.logger.info(f"Skipping notification for {symbol}: last notification was {(now - last_timestamp).total_seconds() / 3600:.1f} hours ago with same sentiment")
-                return False
+            if (last_timestamp and now - last_timestamp < timedelta(hours=self.notification_cooldown)):
+                # Only notify if confidence has increased significantly
+                if current_sentiment["confidence"] <= last_sentiment.get("confidence", 0.0):
+                    self.logger.info(f"Skipping notification for {symbol}: last notification was {(now - last_timestamp).total_seconds() / 3600:.1f} hours ago with same or higher confidence")
+                    return False
+                # Also check if sentiment has changed significantly
+                if (current_sentiment["overall"] == last_sentiment.get("overall") and 
+                    current_sentiment["strength"] == last_sentiment.get("strength")):
+                    self.logger.info(f"Skipping notification for {symbol}: sentiment hasn't changed significantly")
+                    return False
         
-        # Store this notification
+        # Store this notification with complete sentiment data
         self.recent_notifications[symbol] = {
             "timestamp": now,
-            "sentiment": {
-                "overall": sentiment.get("overall"),
-                "strength": sentiment.get("strength"),
-                "confidence": sentiment.get("confidence"),
-                "volume": sentiment.get("volume")
-            }
+            "sentiment": current_sentiment
         }
         self._save_notifications()
         
+        self.logger.info(f"Storing new notification for {symbol} with sentiment: {current_sentiment}")
         return True
 
     def send_message(self, message: str, chat_id: Optional[str] = None) -> bool:
@@ -194,12 +239,15 @@ class TelegramNotifier:
             bool: True if message was sent successfully
         """
         try:
-            strategy = analysis.get("sentiment", {}).get("strategy", {})
+            sentiment = analysis.get("sentiment", {})
+            strategy = sentiment.get("strategy", {})
+            settings = Settings()
             
             # Check if we should send a notification
-            if not self.should_notify(symbol, strategy):
+            if not self.should_notify(symbol, sentiment):
                 return False
             
+            # Get basic analysis data
             overall = sentiment.get("overall", "neutral")
             strength = sentiment.get("strength", "none")
             confidence = sentiment.get("confidence", 0.0)
@@ -207,27 +255,29 @@ class TelegramNotifier:
             volume = analysis.get("volume", 0.0)
             price = analysis.get("price", 0.0)
             
-            # Determine which strategies are showing buy signals
-            active_strategies = []
-            if strategy["momentum"]["score"] >= 0.5 and strategy["momentum"]["confidence"] >= 0.6:
-                active_strategies.append("Momentum")
-            if strategy["mean_reversion"]["score"] >= 0.5 and strategy["mean_reversion"]["confidence"] >= 0.6:
-                active_strategies.append("Mean Reversion")
-            if strategy["breakout"]["score"] >= 0.5 and strategy["breakout"]["confidence"] >= 0.6:
-                active_strategies.append("Breakout")
-            
+            # Build the message
             message = f"<b>🚨 {symbol} Alert</b>\n\n"
-            message += f"💰 Current Price: ${str(price)}\n"
+            message += f"💰 Current Price: ${price:,.2f}\n"
             message += f"🎯 Sentiment: {strength} {overall}\n"
             message += f"🔍 Confidence: {confidence:.2f} ({score:.2f})\n"
-            message += f"📊 Volume: {volume}\n\n"
+            message += f"📊 Volume: {volume:,.0f}\n\n"
             
             # Add strategy details
             message += "<b>Strategy Analysis:</b>\n"
             for strategy_name, data in strategy.items():
-                score = data["score"]
-                confidence = data["confidence"]
-                signal = "🟢" if score >= 0.5 else "🔴"
+                score = data.get("score", 0.0)
+                confidence = data.get("confidence", 0.0)
+                
+                # Get thresholds for this strategy
+                score_threshold = getattr(settings, f"{strategy_name.lower()}_score_threshold", 0.5)
+                confidence_threshold = getattr(settings, f"{strategy_name.lower()}_confidence_threshold", 0.6)
+                
+                # Determine signal based on thresholds
+                if score >= score_threshold and confidence >= confidence_threshold:
+                    signal = "🟢"  # Strong buy signal
+                else:
+                    signal = "🔴"  # Strong sell signal
+                
                 message += f"• {strategy_name.title().replace('_', ' ')}: {signal} Score: {score:.2f} (Confidence: {confidence:.2f})\n"
             
             # Add indicators if available
@@ -235,14 +285,22 @@ class TelegramNotifier:
                 message += "\n<b>Key Indicators:</b>\n"
                 for name, indicator in analysis["indicators"].items():
                     if name.startswith("RSI"):
-                        message += f"• RSI: {indicator['value']['rsi']:.2f}\n"
+                        rsi_value = indicator.get("value", {}).get("rsi", 0.0)
+                        message += f"• RSI: {rsi_value:.2f}\n"
                     elif name.startswith("FIBONACCI"):
-                        if isinstance(indicator['value'], dict):
-                            closest_level = indicator['value'].get('current_level')
+                        if isinstance(indicator.get("value"), dict):
+                            closest_level = indicator["value"].get("current_level", "Unknown")
                             fib_message = f"• Fibonacci: Near {closest_level} level"
                             message += fib_message + "\n"
+                    elif name.startswith("MACD"):
+                        macd_data = indicator.get("value", {})
+                        message += f"• MACD: {macd_data.get('macd', 0.0):.2f} (Signal: {macd_data.get('signal', 0.0):.2f})\n"
+                    elif name.startswith("BBANDS"):
+                        bbands_data = indicator.get("value", {})
+                        message += f"• BB: Upper: {bbands_data.get('upper', 0.0):.2f} Lower: {bbands_data.get('lower', 0.0):.2f}\n"
 
-            message += f"\n<i>Generated at {analysis.get('timestamp', 'N/A')}</i>"
+            # Add timestamp
+            message += f"\n<i>Generated at {analysis.get('timestamp', datetime.now().isoformat())}</i>"
             
             return self.send_message(message, chat_id)
             

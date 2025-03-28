@@ -17,19 +17,5 @@
     "enabled": false,
     "email": "",
     "strong_signals_only": true
-  },
-  "strategy": {
-    "momentum": {
-      "score_threshold": 0.5,
-      "confidence_threshold": 0.6
-    },
-    "mean_reversion": {
-      "score_threshold": 0.5,
-      "confidence_threshold": 0.6
-    },
-    "breakout": {
-      "score_threshold": 0.5,
-      "confidence_threshold": 0.6
-    }
   }
 }

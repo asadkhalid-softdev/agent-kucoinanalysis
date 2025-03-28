@@ -318,18 +318,9 @@ class SymbolStorage:
                 self.logger.warning("No symbols fetched from KuCoin, keeping existing symbols")
                 return False
             
-            symbols = [
-                "BTC-USDT",
-                "ETH-USDT",
-                "BNB-USDT",
-                "XRP-USDT",
-                "ADA-USDT",
-                "DOGE-USDT",
-                "MATIC-USDT",
-                "SOL-USDT",
-                "DOT-USDT",
-                "LINK-USDT"
-            ]
+            # symbols = [
+            #     "DBR-USDT",
+            # ]
             
             # Save the symbols
             symbols = sorted(symbols)
